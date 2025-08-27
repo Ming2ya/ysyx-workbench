@@ -1,0 +1,10 @@
+*.*
+*
+!*/
+!*/Makefile
+!*/*.v
+!*/*.cpp
+*/build/
+!Makefile
+!.gitignore
+!README.md

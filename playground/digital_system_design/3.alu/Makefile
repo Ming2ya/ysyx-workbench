@@ -1,0 +1,2 @@
+name=alu
+include ../Makefile

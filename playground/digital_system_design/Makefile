@@ -1,26 +1,33 @@
 CPPFLAGS += -I$(NVBOARD_HOME)/usr/include
+CPPFLAGS += -I$(VERILATOR_INC_DIR)
 LDFLAGS += -L$(NVBOARD_HOME)/build
 
 include $(NVBOARD_HOME)/scripts/nvboard.mk
-include ../Makefile
-all:
-	#@echo "Write this Makefile by your self."
 
 TOPNAME = $(name)
-NXDC_FILES = constr/$(TOPNAME).nxdc
+
+NXDC_FILES = ./$(TOPNAME).nxdc
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 $(shell mkdir -p $(BUILD_DIR))
+SIM_SRCS = $(abspath ./sim_$(TOPNAME).cpp)
+BOARD_SRCS = $(abspath ./board_$(TOPNAME).cpp)
+VSRCS = $(abspath ./$(TOPNAME).v)
+VFLAGS = -cc -MMD --build --exe --top-module $(TOPNAME)
 
-SIM_SRCS = $(abspath ./csrc/sim_$(TOPNAME).cpp)
-BOARD_SRCS = $(abspath ./csrc/board_$(TOPNAME).cpp)
-VSRCS = $(abspath ./vsrc/$(TOPNAME).v)
-VFLAGS = -cc -MMD --build --exe -Wall
+env_var:
+env_var:
+	@echo "TOPNAME = $(TOPNAME)"
+	@echo "VSRCS = $(VSRCS)"
+	@echo "BOARD_SRCS = $(BOARD_SRCS)"
+	@echo "SIM_SRCS = $(SIM_SRCS)"
+	@echo "NXDC_FILES = $(NXDC_FILES)"
+	@echo "OBJ_DIR = $(OBJ_DIR)"
+	@echo "BIN = $(BIN)"
+	@echo "SRC_AUTO_BIND = $(SRC_AUTO_BIND)"
 
 sim:
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	#@echo "Write this Makefile by your self."
 	verilator $(VFLAGS) $(VSRCS) $(SIM_SRCS) --trace-fst\
 		 --Mdir $(OBJ_DIR) -o $(abspath $(BIN))
 	$(BIN)
@@ -39,3 +46,5 @@ $(BIN): $(VSRCS) $(BOARD_SRCS) $(SRC_AUTO_BIND) $(NVBOARD_ARCHIVE)
 
 clean:
 	rm -rf build *.fst
+
+.PHONY: env_var clean board sim
