@@ -54,6 +54,63 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 
+static int cmd_si(char *args){
+    int step = args == NULL ? 1 : atoi(args);
+    if (step <= 0){
+        Log("Invalid input N, nothing happened");
+        return 0;
+    }
+    cpu_exec(step);
+    return 0;
+}
+
+static int cmd_info(char* args){
+    if (!strcmp(args, "r")){
+        printf("info of reg\n");
+        isa_reg_display();
+    }
+    else if (!strcmp(args, "w")){
+        printf("info of watch point\n");
+        //to do
+    }
+    else {
+        Log("Unknown subCMD, use r / w for reg / watch point info");
+    }
+    return 0;
+}
+
+word_t paddr_read(paddr_t addr, int len);
+
+static int cmd_x(char* args){
+    int N = atoi(strtok(args, " "));
+    if (N <= 0){
+        Log("Invalid input N, nothing happened");
+        return 0;
+    }
+    paddr_t addr = strtol(strtok(NULL, " "), NULL, 16);
+    // if (!(addr >= 0x80000000 && addr + N <= 0x87ffffff)){
+    //     Log("out of mem area, nothing appened");
+    //     return 0;
+    // }    paddr_read已经进行判断了
+    for (int i = 0; i < N; i ++){
+        word_t ret = paddr_read(addr + 4 * i, 4);
+        printf("%#010x\n", ret);
+    }
+    return 0;
+}
+
+static int cmd_p(char* args){
+    return 0;
+}
+
+static int cmd_w(char* args){
+    return 0;
+}
+
+static int cmd_d(char* args){
+    return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -64,7 +121,12 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
-
+  { "si", "si [N], Execute N instructions in single-step mode", cmd_si },
+  { "info", "info r / w, Print reg / watch point info", cmd_info },
+  { "x", "x N EXPR, Dispaly N consecutive 4-byte values in hexadecimal from address EXPR", cmd_x },
+  { "p", "p EXPR, Evaluate and print the value of EXPR", cmd_p },
+  { "w", "w EXPR, Set watch point at address EXPR", cmd_w },
+  { "d", "d N, Delete watch point number N", cmd_d }
 };
 
 #define NR_CMD ARRLEN(cmd_table)
