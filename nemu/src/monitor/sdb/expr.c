@@ -19,26 +19,38 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#define EXPR_LOG 1
 
 enum {
   TK_NOTYPE = 256, TK_EQ,
 
   /* TODO: Add more token types */
-
+  TK_DIGIT
 };
+
+static word_t eval(int p, int q);
+static bool check_parentheses(int p, int q);
+static int find_main_op(int p, int q);
 
 static struct rule {
   const char *regex;
   int token_type;
+  int token_priority;
 } rules[] = {
 
   /* TODO: Add more rules.
    * Pay attention to the precedence level of different rules.
    */
 
-  {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
-  {"==", TK_EQ},        // equal
+  {" +", TK_NOTYPE, -1},        // spaces
+  {"\\+", '+', 4},              // plus
+  {"==", TK_EQ, -1},            // equal
+  {"[0-9]+", TK_DIGIT, -1},     // digit
+  {"-", '-', 4},
+  {"\\*", '*', 3},
+  {"/", '/', 3},
+  {"\\(", '(', -1},
+  {"\\)", ')', -1}
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -64,6 +76,7 @@ void init_regex() {
 
 typedef struct token {
   int type;
+  int priority;
   char str[32];
 } Token;
 
@@ -84,8 +97,8 @@ static bool make_token(char *e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        IFONE(EXPR_LOG, Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+            i, rules[i].regex, position, substr_len, substr_len, substr_start));
 
         position += substr_len;
 
@@ -95,7 +108,12 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+          case TK_NOTYPE: break;
+          case TK_DIGIT: strncpy(tokens[nr_token].str, substr_start, substr_len);
+          default:
+            tokens[nr_token].type = rules[i].token_type;
+            tokens[nr_token].priority = rules[i].token_priority;
+            nr_token ++; 
         }
 
         break;
@@ -119,7 +137,82 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  word_t val = eval(0, nr_token - 1);
+  return val;
+}
 
-  return 0;
+static bool check_parentheses(int p, int q){
+    if (tokens[p].type != '(' || tokens[q].type != ')')
+        return false;
+    int depth = 1;
+    bool flag = true;
+    for (int i = p + 1; i < q; i ++){
+        if (tokens[i].type == '(')
+            depth += 1;
+        else if (tokens[i].type == ')')
+            depth -= 1;
+        
+        if (depth == 0)
+            flag = false;
+        else if (depth < 0)
+            Assert(0, "Bad parentheses");
+    }
+    if (depth == 1 && flag)
+        return true;
+    else 
+        return false;
+}
+
+static int find_main_op(int p, int q){
+    int depth = 0;
+    int main_op = -1;
+    int main_priority = 0;
+    for (int i = p; i <= q; i ++){
+        if (tokens[i].type == '(')
+            depth += 1;
+        else if (tokens[i].type == ')')
+            depth -= 1;
+        
+        if (depth < 0)
+            Assert(0, "Bad parentheses");
+        else if (depth > 0 || tokens[i].priority <= main_priority )
+            continue;
+        else {
+            main_op = i;
+            main_priority = tokens[i].priority;
+        }
+    }
+    Assert(main_op >= 0, "Main op not found");
+    IFONE(EXPR_LOG, printf("main op at %d\n", main_op));
+    return main_op;
+}
+
+static word_t eval(int p, int q){
+    if (p > q){
+        Assert(0, "Bad expression");
+    }
+    else if (p == q){
+        Assert(tokens[p].type == TK_DIGIT, "Not a number at end");
+        return atoi(tokens[p].str);
+    }
+    else if (check_parentheses(p, q) == true){
+        return eval(p + 1, q - 1);
+    }
+    else {
+        int op = find_main_op(p, q);
+        Assert(tokens[op].priority > 0, "Not an operator as main op");
+        word_t val1 = eval(p, op - 1);
+        word_t val2 = eval(op + 1, q);
+        IFONE(EXPR_LOG, printf("val1 = %d\n", val1));
+        IFONE(EXPR_LOG, printf("val2 = %d\n", val2));
+        switch (tokens[op].type){
+            case '+': return val1 + val2;
+            case '-': return val1 - val2;
+            case '*': return val1 * val2;
+            case '/': 
+                Assert(val2 != 0, "div 0 error");
+                return val1 / val2;
+            default: Assert(0, "No match operator");
+        }
+    }
 }

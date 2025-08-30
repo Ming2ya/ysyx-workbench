@@ -100,7 +100,13 @@ static int cmd_x(char* args){
 }
 
 static int cmd_p(char* args){
-    return 0;
+    bool success = true;
+    int val = expr(args, &success);
+    if (success){
+        printf("%d\n", val);
+        return 0;
+    }
+    return -1;
 }
 
 static int cmd_w(char* args){
