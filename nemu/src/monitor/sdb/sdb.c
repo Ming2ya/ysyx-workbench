@@ -103,7 +103,7 @@ static int cmd_p(char* args){
     bool success = true;
     int val = expr(args, &success);
     if (success){
-        printf("%d\n", val);
+        printf("%u\n", val);
         return 0;
     }
     return -1;
@@ -115,6 +115,34 @@ static int cmd_w(char* args){
 
 static int cmd_d(char* args){
     return 0;
+}
+
+static int cmd_test(char* args){
+    FILE *fp = fopen("./tools/gen-expr/input", "r");
+    Assert(fp != NULL, "input file not found");
+    char str[1024] = {};
+    int line = 0;
+    int done = 0;
+    while(fgets(str, 1024, fp) != NULL){
+        //printf("working on line %d\n", line);
+        uint32_t actual_val = atoi(strtok(str, " "));
+        bool success = true;
+        uint32_t eval_val = expr(strtok(NULL, "\n"), &success);
+        if (success){
+            if (actual_val != eval_val){
+                printf("unmatched result at line %d\n", line);
+                done = -1;
+            }
+        }
+        else {
+            printf("failed to eval the expr at line %d\n", line);
+            done = -1;
+        }
+        line ++;
+    } 
+    if (done == 0)
+        printf("test done successfully\n");
+    return done;
 }
 
 static struct {
@@ -132,7 +160,8 @@ static struct {
   { "x", "x N EXPR, Dispaly N consecutive 4-byte values in hexadecimal from address EXPR", cmd_x },
   { "p", "p EXPR, Evaluate and print the value of EXPR", cmd_p },
   { "w", "w EXPR, Set watch point at address EXPR", cmd_w },
-  { "d", "d N, Delete watch point number N", cmd_d }
+  { "d", "d N, Delete watch point number N", cmd_d },
+  { "test", "test expr", cmd_test }
 };
 
 #define NR_CMD ARRLEN(cmd_table)

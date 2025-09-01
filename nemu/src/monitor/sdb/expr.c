@@ -19,7 +19,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-#define EXPR_LOG 1
+#define EXPR_LOG 0
 
 enum {
   TK_NOTYPE = 256, TK_EQ,
@@ -80,7 +80,7 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[1024] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -175,7 +175,7 @@ static int find_main_op(int p, int q){
         
         if (depth < 0)
             Assert(0, "Bad parentheses");
-        else if (depth > 0 || tokens[i].priority <= main_priority )
+        else if (depth > 0 || tokens[i].priority < main_priority )
             continue;
         else {
             main_op = i;
@@ -203,8 +203,8 @@ static word_t eval(int p, int q){
         Assert(tokens[op].priority > 0, "Not an operator as main op");
         word_t val1 = eval(p, op - 1);
         word_t val2 = eval(op + 1, q);
-        IFONE(EXPR_LOG, printf("val1 = %d\n", val1));
-        IFONE(EXPR_LOG, printf("val2 = %d\n", val2));
+        IFONE(EXPR_LOG, printf("val1 = %u\n", val1));
+        IFONE(EXPR_LOG, printf("val2 = %u\n", val2));
         switch (tokens[op].type){
             case '+': return val1 + val2;
             case '-': return val1 - val2;
