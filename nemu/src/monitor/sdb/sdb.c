@@ -104,9 +104,11 @@ static int cmd_p(char* args){
     int val = expr(args, &success);
     if (success){
         printf("%u\n", val);
-        return 0;
     }
-    return -1;
+    else {
+        printf("Fail to eval, try again\n");
+    }
+    return 0;
 }
 
 static int cmd_w(char* args){

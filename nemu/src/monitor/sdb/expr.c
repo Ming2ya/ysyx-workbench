@@ -28,8 +28,13 @@ enum {
   TK_DIGIT
 };
 
-static word_t eval(int p, int q);
-static bool check_parentheses(int p, int q);
+struct result {     //struct的static是只能在构造后面创建变量，有没有像函数static那样只能在本文件内访问的方法？
+    word_t ok;
+    bool err;
+};
+
+static struct result eval(int p, int q);
+static int check_parentheses(int p, int q);
 static int find_main_op(int p, int q);
 
 static struct rule {
@@ -132,20 +137,22 @@ static bool make_token(char *e) {
 
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
+    Log("Fail to make tokens");
     *success = false;
     return 0;
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  word_t val = eval(0, nr_token - 1);
-  return val;
+  struct result val = eval(0, nr_token - 1);
+  *success = ! val.err;
+  return val.ok;
 }
 
-static bool check_parentheses(int p, int q){
+static int check_parentheses(int p, int q){
     if (tokens[p].type != '(' || tokens[q].type != ')')
-        return false;
+        return 0;
     int depth = 1;
-    bool flag = true;
+    int flag = 1;
     for (int i = p + 1; i < q; i ++){
         if (tokens[i].type == '(')
             depth += 1;
@@ -153,14 +160,18 @@ static bool check_parentheses(int p, int q){
             depth -= 1;
         
         if (depth == 0)
-            flag = false;
-        else if (depth < 0)
-            Assert(0, "Bad parentheses");
+            flag = 0;
+        else if (depth < 0){
+            Log("Bad parentheses");
+            return -1;
+        }
     }
     if (depth == 1 && flag)
-        return true;
-    else 
-        return false;
+        return 1;
+    else {
+        Log("Bad parentheses");
+        return -1;
+    }
 }
 
 static int find_main_op(int p, int q){
@@ -173,8 +184,10 @@ static int find_main_op(int p, int q){
         else if (tokens[i].type == ')')
             depth -= 1;
         
-        if (depth < 0)
-            Assert(0, "Bad parentheses");
+        if (depth < 0){
+            Log("Bad parentheses");
+            return -2;
+        }
         else if (depth > 0 || tokens[i].priority < main_priority )
             continue;
         else {
@@ -182,37 +195,72 @@ static int find_main_op(int p, int q){
             main_priority = tokens[i].priority;
         }
     }
-    Assert(main_op >= 0, "Main op not found");
+    if (main_op < 0){
+        Log("Main op not found");
+        return -1;
+    } 
     IFONE(EXPR_LOG, printf("main op at %d\n", main_op));
     return main_op;
 }
 
-static word_t eval(int p, int q){
+static struct result eval(int p, int q){
+    struct result val;
+    val.err = false;
+    val.ok = 0;
     if (p > q){
-        Assert(0, "Bad expression");
+        Log("Bad expression");
+        val.err = true;
+        return val;
     }
     else if (p == q){
-        Assert(tokens[p].type == TK_DIGIT, "Not a number at end");
-        return atoi(tokens[p].str);
+        if (tokens[p].type != TK_DIGIT){
+            Log("Not a number at end");
+            val.err = true;
+        }
+        val.ok = atoi(tokens[p].str);
+        return val;
     }
-    else if (check_parentheses(p, q) == true){
+    else if (check_parentheses(p, q) == 1){
         return eval(p + 1, q - 1);
+    }
+    else if (check_parentheses(p, q) == -1){
+        val.err = true;
+        return val;
     }
     else {
         int op = find_main_op(p, q);
-        Assert(tokens[op].priority > 0, "Not an operator as main op");
-        word_t val1 = eval(p, op - 1);
-        word_t val2 = eval(op + 1, q);
-        IFONE(EXPR_LOG, printf("val1 = %u\n", val1));
-        IFONE(EXPR_LOG, printf("val2 = %u\n", val2));
-        switch (tokens[op].type){
-            case '+': return val1 + val2;
-            case '-': return val1 - val2;
-            case '*': return val1 * val2;
-            case '/': 
-                Assert(val2 != 0, "div 0 error");
-                return val1 / val2;
-            default: Assert(0, "No match operator");
+        if (op < 0){
+            val.err = true;
+            return val;
         }
+        if(tokens[op].priority < 0){
+            Log("Not an operator as main op");
+            val.err = true;
+            return val;
+        }
+        struct result val1 = eval(p, op - 1);
+        struct result val2 = eval(op + 1, q);
+        if (val1.err == true)
+            return val1;
+        if (val2.err == true)
+            return val2;
+        IFONE(EXPR_LOG, printf("val1 = %u\n", val1.ok));
+        IFONE(EXPR_LOG, printf("val2 = %u\n", val2.ok));
+        switch (tokens[op].type){
+            case '+': val.ok = val1.ok + val2.ok; break;
+            case '-': val.ok = val1.ok - val2.ok; break;
+            case '*': val.ok = val1.ok * val2.ok; break;
+            case '/': 
+                if (val2.ok == 0){
+                    Log("div 0 error");
+                    val.err = true;
+                    return val;
+                }
+                val.ok =  val1.ok / val2.ok; break;
+            default: 
+                Log("No match operator");
+                val.err = true;
+        }
+        return val;
     }
 }
