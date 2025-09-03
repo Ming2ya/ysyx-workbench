@@ -19,13 +19,13 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-#define EXPR_LOG 0
+#define EXPR_LOG 1
 
 enum {
   TK_NOTYPE = 256, TK_EQ,
 
   /* TODO: Add more token types */
-  TK_DIGIT
+  TK_DECIMAL, TK_HEX, TK_NE, TK_REG, TK_DEREF
 };
 
 struct result {     //struct的static是只能在构造后面创建变量，有没有像函数static那样只能在本文件内访问的方法？
@@ -36,6 +36,8 @@ struct result {     //struct的static是只能在构造后面创建变量，有�
 static struct result eval(int p, int q);
 static int check_parentheses(int p, int q);
 static int find_main_op(int p, int q);
+word_t isa_reg_str2val(const char *s, bool *success);
+word_t paddr_read(paddr_t addr, int len);
 
 static struct rule {
   const char *regex;
@@ -47,15 +49,20 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {" +", TK_NOTYPE, -1},        // spaces
-  {"\\+", '+', 4},              // plus
-  {"==", TK_EQ, -1},            // equal
-  {"[0-9]+", TK_DIGIT, -1},     // digit
+  {" +", TK_NOTYPE, -2},            // spaces
+  {"\\+", '+', 4},                  // plus
+  {"==", TK_EQ, 7},                 // equal
+  {"0x[0-9]+", TK_HEX, -1},         // hexdecimal_number
+  {"[0-9]+", TK_DECIMAL, -1},       // decimal_number
   {"-", '-', 4},
   {"\\*", '*', 3},
   {"/", '/', 3},
   {"\\(", '(', -1},
-  {"\\)", ')', -1}
+  {"\\)", ')', -1},
+  {"!=", TK_NE, 7},
+  {"&&", '&', 11},
+  {"\\$[a-z]*[0-9]*",TK_REG, -1},
+  {"", TK_DEREF, 2}
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -82,11 +89,28 @@ void init_regex() {
 typedef struct token {
   int type;
   int priority;
-  char str[32];
+  word_t value;
 } Token;
 
 static Token tokens[1024] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+
+static void make_value(char* substr, int len){
+    char str[32] = {};
+    strncpy(str, substr, len);
+    str[len] = '\0';
+    tokens[nr_token].value = strtol(str, NULL, 0);
+}
+static void make_reg(char* substr, int len){
+    char str[32] = {};
+    bool success;
+    strncpy(str, substr, len);
+    str[len] = '\0';
+    tokens[nr_token].value = isa_reg_str2val(str + 1, &success);
+    if (!success){
+        Log("Unknown register");
+    }
+}
 
 static bool make_token(char *e) {
   int position = 0;
@@ -112,14 +136,19 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
-        switch (rules[i].token_type) {
-          case TK_NOTYPE: break;
-          case TK_DIGIT: strncpy(tokens[nr_token].str, substr_start, substr_len);
-          default:
-            tokens[nr_token].type = rules[i].token_type;
-            tokens[nr_token].priority = rules[i].token_priority;
-            nr_token ++; 
+        if (rules[i].token_type == TK_NOTYPE){
+            break;
         }
+        else if (rules[i].token_priority < 0){
+            if (rules[i].token_type == TK_REG)
+                make_reg(substr_start, substr_len);
+            else
+                make_value(substr_start, substr_len);
+            
+        }
+        tokens[nr_token].type = rules[i].token_type;
+        tokens[nr_token].priority = rules[i].token_priority;
+        nr_token ++; 
 
         break;
       }
@@ -143,6 +172,12 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
+  for (int i = 0; i < nr_token; i ++) {
+    if (tokens[i].type == '*' && (i == 0 || tokens[i - 1].priority > 0) ) {
+        tokens[i].type = TK_DEREF;
+        tokens[i].priority = 2;
+    }
+  }
   struct result val = eval(0, nr_token - 1);
   *success = ! val.err;
   return val.ok;
@@ -213,11 +248,11 @@ static struct result eval(int p, int q){
         return val;
     }
     else if (p == q){
-        if (tokens[p].type != TK_DIGIT){
+        if (tokens[p].priority != -1){
             Log("Not a number at end");
             val.err = true;
         }
-        val.ok = atoi(tokens[p].str);
+        val.ok = tokens[p].value;
         return val;
     }
     else if (check_parentheses(p, q) == 1){
@@ -225,6 +260,19 @@ static struct result eval(int p, int q){
     }
     else if (check_parentheses(p, q) == -1){
         val.err = true;
+        return val;
+    }
+    else if (tokens[p].priority == 2){          //单目运算
+        int op = p;
+        struct result val1 = eval(p + 1, q);
+        if (val1.err == true)
+            return val1;
+        switch(tokens[op].type){
+            case TK_DEREF: val.ok = paddr_read(val1.ok, 4); break;
+            default: 
+                Log("No match operator");
+                val.err = true;
+        }
         return val;
     }
     else {
@@ -257,6 +305,9 @@ static struct result eval(int p, int q){
                     return val;
                 }
                 val.ok =  val1.ok / val2.ok; break;
+            case TK_EQ: val.ok = val1.ok == val2.ok; break;
+            case TK_NE: val.ok = val1.ok != val2.ok; break;
+            case '&': val.ok = val1.ok && val2.ok; break;
             default: 
                 Log("No match operator");
                 val.err = true;
