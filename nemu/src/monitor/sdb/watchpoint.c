@@ -19,6 +19,8 @@
 
 typedef struct watchpoint {
   int NO;
+  char expr[64];
+  word_t pre_val;
   struct watchpoint *next;
 
   /* TODO: Add more members if necessary */
@@ -41,3 +43,88 @@ void init_wp_pool() {
 
 /* TODO: Implement the functionality of watchpoint */
 
+WP* new_wp(char* str){
+    Assert(free_ != NULL, "Not enough watchpoint in the wp_pool");
+    word_t val;
+    bool success;
+    val = expr(str, &success);
+    if (success){
+        WP* head_next = head;
+        head = free_;
+        free_ = free_->next;
+        head->next = head_next;
+        head->pre_val = val;
+        strcpy(head->expr, str);
+        Log("Watchpoint %d: %s", head->NO, head->expr);
+        return head;
+    }
+    else {
+        Log("Can't eval the wp, check and try again");
+        return NULL;
+    }
+}
+
+static void free_wp(WP *wp){
+    WP* node, *pre_node;
+    node = head;
+    if (node == wp){
+        pre_node = head;
+        head = head->next;
+        pre_node->next = free_;
+        free_ = pre_node;
+        return;
+    }
+    while (node->next != NULL){
+        pre_node = node;
+        node = node->next;
+        if (node == wp){
+            pre_node->next = node->next;
+            node->next = free_->next;
+            free_ = node;
+            return;
+        }
+    }
+    Log("unkown watchpoint, fail to free");
+    return;
+}
+
+bool diff_wp(){
+    WP* node = head;
+    word_t val;
+    while (node != NULL){
+        val = expr(node->expr, NULL);
+        if (val != node->pre_val){
+            Log("Watchpoint %d: %s", node->NO, node->expr);
+            Log("Old value = %u", node->pre_val);
+            Log("New value = %u", val);
+            return false;
+        }
+        node = node->next;
+    }
+    return true;
+}
+
+void info_wp(){
+    if (head == NULL){
+        printf("No watchpoints\n");
+    }
+    else {
+        printf("%-10s%-10s%-15s\n", "Num", "Type", "What");
+        WP* node = head;
+        while (node != NULL){
+            printf("%-10d%-10s%-15s\n", node->NO, "watchpoint", node->expr);
+        }
+    }
+}
+
+void del_wp(int num){
+    WP* node = head;
+    while (node != NULL){
+        if (node->NO == num){
+            free_wp(node);
+            printf("delete watchpoint %d\n", num);
+            return;
+        }
+    }
+    printf("No watchpoint number %d\n", num);
+}

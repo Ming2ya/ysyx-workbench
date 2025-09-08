@@ -19,7 +19,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-#define EXPR_LOG 1
+#define EXPR_LOG 0
 
 enum {
   TK_NOTYPE = 256, TK_EQ,
@@ -167,7 +167,8 @@ static bool make_token(char *e) {
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     Log("Fail to make tokens");
-    *success = false;
+    if (success != NULL)
+        *success = false;
     return 0;
   }
 
@@ -179,7 +180,8 @@ word_t expr(char *e, bool *success) {
     }
   }
   struct result val = eval(0, nr_token - 1);
-  *success = ! val.err;
+  if (success != NULL)
+    *success = ! val.err;
   return val.ok;
 }
 

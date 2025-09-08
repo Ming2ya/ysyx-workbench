@@ -71,7 +71,7 @@ static int cmd_info(char* args){
     }
     else if (!strcmp(args, "w")){
         printf("info of watch point\n");
-        //to do
+        info_wp();
     }
     else {
         Log("Unknown subCMD, use r / w for reg / watch point info");
@@ -101,7 +101,7 @@ static int cmd_x(char* args){
 
 static int cmd_p(char* args){
     bool success = true;
-    int val = expr(args, &success);
+    word_t val = expr(args, &success);
     if (success){
         printf("%u\n", val);
     }
@@ -112,10 +112,12 @@ static int cmd_p(char* args){
 }
 
 static int cmd_w(char* args){
+    new_wp(args);
     return 0;
 }
 
 static int cmd_d(char* args){
+    del_wp(atoi(args));
     return 0;
 }
 
