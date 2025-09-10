@@ -22,6 +22,7 @@ typedef struct watchpoint WP;
 
 word_t expr(char *e, bool *success);
 WP* new_wp(char* str);
+WP* new_bp(char* str);
 void info_wp();
 void del_wp(int num);
 

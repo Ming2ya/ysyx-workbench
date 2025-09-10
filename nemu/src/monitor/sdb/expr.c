@@ -101,15 +101,18 @@ static void make_value(char* substr, int len){
     str[len] = '\0';
     tokens[nr_token].value = strtol(str, NULL, 0);
 }
-static void make_reg(char* substr, int len){
-    char str[32] = {};
+static void make_reg(char* substr, int len, bool* succ){
+    char str[8] = {};
     bool success;
     strncpy(str, substr, len);
     str[len] = '\0';
     tokens[nr_token].value = isa_reg_str2val(str + 1, &success);
     if (!success){
-        Log("Unknown register");
+        Warn("Unknown register");
+        *succ = false;
+        return;
     }
+    *succ = true;
 }
 
 static bool make_token(char *e) {
@@ -140,11 +143,14 @@ static bool make_token(char *e) {
             break;
         }
         else if (rules[i].token_priority < 0){
-            if (rules[i].token_type == TK_REG)
-                make_reg(substr_start, substr_len);
+            if (rules[i].token_type == TK_REG){
+                bool success;
+                make_reg(substr_start, substr_len, &success);
+                if (!success)
+                    return false;
+            }
             else
                 make_value(substr_start, substr_len);
-            
         }
         tokens[nr_token].type = rules[i].token_type;
         tokens[nr_token].priority = rules[i].token_priority;
@@ -166,7 +172,7 @@ static bool make_token(char *e) {
 
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
-    Log("Fail to make tokens");
+    Warn("Fail to make tokens");
     if (success != NULL)
         *success = false;
     return 0;
@@ -199,14 +205,14 @@ static int check_parentheses(int p, int q){
         if (depth == 0)
             flag = 0;
         else if (depth < 0){
-            Log("Bad parentheses");
+            Warn("Bad parentheses");
             return -1;
         }
     }
     if (depth == 1 && flag)
         return 1;
     else {
-        Log("Bad parentheses");
+        Warn("Bad parentheses");
         return -1;
     }
 }
@@ -222,7 +228,7 @@ static int find_main_op(int p, int q){
             depth -= 1;
         
         if (depth < 0){
-            Log("Bad parentheses");
+            Warn("Bad parentheses");
             return -2;
         }
         else if (depth > 0 || tokens[i].priority < main_priority )
@@ -233,7 +239,7 @@ static int find_main_op(int p, int q){
         }
     }
     if (main_op < 0){
-        Log("Main op not found");
+        Warn("Main op not found");
         return -1;
     } 
     IFONE(EXPR_LOG, printf("main op at %d\n", main_op));
@@ -245,13 +251,13 @@ static struct result eval(int p, int q){
     val.err = false;
     val.ok = 0;
     if (p > q){
-        Log("Bad expression");
+        Warn("Bad expression");
         val.err = true;
         return val;
     }
     else if (p == q){
         if (tokens[p].priority != -1){
-            Log("Not a number at end");
+            Warn("Not a number at end");
             val.err = true;
         }
         val.ok = tokens[p].value;
@@ -272,7 +278,7 @@ static struct result eval(int p, int q){
         switch(tokens[op].type){
             case TK_DEREF: val.ok = paddr_read(val1.ok, 4); break;
             default: 
-                Log("No match operator");
+                Warn("No match operator");
                 val.err = true;
         }
         return val;
@@ -284,7 +290,7 @@ static struct result eval(int p, int q){
             return val;
         }
         if(tokens[op].priority < 0){
-            Log("Not an operator as main op");
+            Warn("Not an operator as main op");
             val.err = true;
             return val;
         }
@@ -302,7 +308,7 @@ static struct result eval(int p, int q){
             case '*': val.ok = val1.ok * val2.ok; break;
             case '/': 
                 if (val2.ok == 0){
-                    Log("div 0 error");
+                    Warn("div 0 error");
                     val.err = true;
                     return val;
                 }
@@ -311,7 +317,7 @@ static struct result eval(int p, int q){
             case TK_NE: val.ok = val1.ok != val2.ok; break;
             case '&': val.ok = val1.ok && val2.ok; break;
             default: 
-                Log("No match operator");
+                Warn("No match operator");
                 val.err = true;
         }
         return val;

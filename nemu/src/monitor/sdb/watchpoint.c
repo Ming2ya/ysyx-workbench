@@ -20,6 +20,7 @@
 typedef struct watchpoint {
   int NO;
   char expr[64];
+  char type[16];
   word_t pre_val;
   struct watchpoint *next;
 
@@ -54,12 +55,34 @@ WP* new_wp(char* str){
         free_ = free_->next;
         head->next = head_next;
         head->pre_val = val;
+        strcpy(head->type, "watchpoint");
         strcpy(head->expr, str);
-        Log("Watchpoint %d: %s", head->NO, head->expr);
+        printf("Watchpoint %d: %s\n", head->NO, head->expr);
         return head;
     }
     else {
         Log("Can't eval the wp, check and try again");
+        return NULL;
+    }
+}
+
+WP* new_bp(char* str){
+    Assert(free_ != NULL, "Not enough watchpoint in the wp_pool");
+    word_t val;
+    val = strtol(str, NULL, 16);
+    if (val >= 0x80000000 && val <= 0x87ffffff){
+        WP* head_next = head;
+        head = free_;
+        free_ = free_->next;
+        head->next = head_next;
+        strcpy(head->type, "breakpoint");
+        strcpy(head->expr, "$pc == ");
+        strcat(head->expr, str);
+        printf("Breakpoint %d: %s\n", head->NO, head->expr);
+        return head;
+    }
+    else {
+        Log("ADDR out of bound [0x80000000, 0x87ffffff], check and try again");
         return NULL;
     }
 }
@@ -93,11 +116,20 @@ bool diff_wp(){
     word_t val;
     while (node != NULL){
         val = expr(node->expr, NULL);
-        if (val != node->pre_val){
-            Log("Watchpoint %d: %s", node->NO, node->expr);
-            Log("Old value = %u", node->pre_val);
-            Log("New value = %u", val);
-            return false;
+        if (!strcmp(node->type, "watchpoint")){
+            if (val != node->pre_val){
+                node->pre_val = val;
+                printf("Watchpoint %d: %s\n", node->NO, node->expr);
+                printf("Old value = %u\n", node->pre_val);
+                printf("New value = %u\n", val);
+                return false;
+            }
+        }
+        if (!strcmp(node->type, "breakpoint")){
+            if (val){
+                printf("hit breakpoint %d: %s\n", node->NO, node->expr);
+                return false;
+            }
         }
         node = node->next;
     }
@@ -109,10 +141,11 @@ void info_wp(){
         printf("No watchpoints\n");
     }
     else {
-        printf("%-10s%-10s%-15s\n", "Num", "Type", "What");
+        printf("%-8s%-16s%-16s\n", "Num", "Type", "What");
         WP* node = head;
         while (node != NULL){
-            printf("%-10d%-10s%-15s\n", node->NO, "watchpoint", node->expr);
+            printf("%-6d%-15s%-15s\n", node->NO, node->type, strcmp(node->type, "breakpoint")? node->expr: node->expr + 7);
+            node = node->next;
         }
     }
 }
@@ -122,9 +155,10 @@ void del_wp(int num){
     while (node != NULL){
         if (node->NO == num){
             free_wp(node);
-            printf("delete watchpoint %d\n", num);
+            printf("delete %s %d\n", node->type, node->NO);
             return;
         }
+        node = node->next;
     }
     printf("No watchpoint number %d\n", num);
 }

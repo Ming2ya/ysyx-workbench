@@ -41,6 +41,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   if (CONFIG_WATCHPOINT){
     if (!diff_wp()){
+        puts(_this->logbuf);
         nemu_state.state = NEMU_STOP;
     }
   }
