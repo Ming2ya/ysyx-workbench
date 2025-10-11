@@ -6,6 +6,7 @@ include ../Makefile
 all:
 	#@echo "Write this Makefile by your self."
 
+name = top
 TOPNAME = $(name)
 NXDC_FILES = constr/$(TOPNAME).nxdc
 BUILD_DIR = ./build
@@ -13,10 +14,10 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 $(shell mkdir -p $(BUILD_DIR))
 
-SIM_SRCS = $(abspath ./csrc/sim_$(TOPNAME).cpp)
+SIM_SRCS = $(abspath ./csrc/*.cpp)
 BOARD_SRCS = $(abspath ./csrc/board_$(TOPNAME).cpp)
-VSRCS = $(abspath ./vsrc/$(TOPNAME).v)
-VFLAGS = -cc -MMD --build --exe -Wall
+VSRCS = $(abspath ./vsrc/*.v)
+VFLAGS = --cc --MMD --build --exe --top-module $(TOPNAME)
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
