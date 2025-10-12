@@ -4,13 +4,20 @@ module IFU(
     output [31:0] pc
 );
     wire [31:0] snpc;
-    assign snpc = pc + 32'd4;
+
+    ALU_add u_ALU_add(
+        .a  	( pc    ),
+        .b  	( 32'd4 ),
+        .ci 	( 1'b0  ),
+        .s  	( snpc  ),
+        .co 	(       )
+    );
 
     Reg #(32, 32'h80000000)
     PC_reg(
         .clk  	(clk   ),
         .rst  	(rst   ),
-        .din  	(snpc   ),
+        .din  	(snpc  ),
         .dout 	(pc    ),
         .wen  	(1'b1  )
     );

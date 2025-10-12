@@ -1,19 +1,32 @@
-#include<stdio.h>
-#include<verilated.h>
-#include<verilated_fst_c.h>
-#include"Vtop.h"
+#include <stdio.h>
+#include <verilated.h>
+#include <verilated_vcd_c.h>
+#include "Vtop.h"
+#include "memory.h"
+
+void exec_once(Vtop* top, VerilatedVcdC* vcd);
+void cpu_init(Vtop* top, VerilatedVcdC* vcd);
 
 int main() {
     Vtop* top = new Vtop;
     Verilated::traceEverOn(true);
-    VerilatedFstC* fst = new VerilatedFstC;
-    top->trace(fst, 5);
-    fst->open("wave.fst");
-    int time = 0;
+    VerilatedVcdC* vcd = new VerilatedVcdC;
+    top->trace(vcd, 5);
+    vcd->set_time_unit("1ns");
+    vcd->set_time_resolution("1ns");
+    vcd->open("wave.vcd");
+
+    pmem_init();
+    cpu_init(top, vcd);
+
+    int i = 0;
+    while (i < 30){
+        i ++;
+        exec_once(top, vcd);
+    }
 
 
-    fst->close();
+    vcd->close();
     top->final();
     return 0;
 }
-
