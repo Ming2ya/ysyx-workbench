@@ -25,9 +25,9 @@ void exec_once(Vtop* top, VerilatedVcdC* vcd) {
 }
 
 void cpu_init(Vtop* top, VerilatedVcdC* vcd) {
+    single_cyc(top, vcd);
     top->clk = 0;
     top->reset = 1;
     cycle(top, vcd, 3);
     top->reset = 0;
-    single_cyc(top, vcd);
 }
