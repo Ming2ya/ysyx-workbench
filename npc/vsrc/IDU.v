@@ -1,14 +1,18 @@
 module IDU(
-    input clk,
+    input  clk,
     //input rst,
-    input [31:0] inst,
-    input [31:0] ALUResult,
-    input [31:0] MemDout,
+    input  [31:0] pc,
+    input  [31:0] inst,
+    input  [31:0] ALUResult,
+    input  [31:0] MemDout,
     output [31:0] src1,
     output [31:0] src2,
     output [31:0] imm,
+    output [31:0] JumpAddr,
     output MemRead,
     output MemWrite,
+    output Jump,
+    output Branch,
     output ALUSrcA,
     output [1:0] ALUSrcB
     );
@@ -50,11 +54,13 @@ module IDU(
                 } )
     );
 
-    wire MemtoReg, RegWrite, Jump, Branch;
+    wire MemtoReg, RegWrite;
     assign MemtoReg = LW;
     assign RegWrite = R_type | I_type | LW | JALR | LUI | AUIPC | JAL;
     assign MemRead = LW;
     assign MemWrite = SW;
+    assign Jump = JALR | JAL;
+    // assign Branch = B_type;
     // 跳转未实现
 
     wire [4:0] rd, rs1, rs2;
@@ -78,6 +84,17 @@ module IDU(
     assign ALUSrcA = JAL | JALR | AUIPC;
     assign ALUSrcB[0] = ~(R_type | JAL | JALR);
     assign ALUSrcB[1] = JAL | AUIPC;
+
+    wire [31:0] base;
+    assign base = (JALR == 1'b1)? src1: pc;
+
+    ALU_add u_JumpAddr_add(
+        .a  	( base      ),
+        .b  	( imm       ),
+        .ci 	( 1'b0      ),
+        .s  	( JumpAddr  ),
+        .co 	(           )
+    );
 
 endmodule
 

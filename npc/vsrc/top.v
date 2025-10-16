@@ -7,13 +7,9 @@ module top(
     output MemRead,
     output MemWrite
 );
-
-    IFU u_IFU(
-        .clk 	( clk   ),
-        .rst 	( reset ),
-        .pc  	( pc    )
-    );
-
+    wire        Jump;
+    wire        Branch;
+    wire [31:0] JumpAddr;
     wire [31:0] src1;
     wire [31:0] src2;
     wire [31:0] imm;
@@ -21,18 +17,31 @@ module top(
     wire        ALUSrcA;
     wire [1:0]  ALUSrcB;
 
+    IFU u_IFU(
+        .clk 	    ( clk       ),
+        .rst 	    ( reset     ),
+        .Jump       (Jump       ),
+        .Branch     (Branch     ),
+        .JumpAddr   (JumpAddr   ),
+        .pc  	    ( pc        )
+    );
+
     IDU u_IDU(
-        .clk       	( clk        ),
-        .inst      	( inst       ),
-        .ALUResult 	( ALUResult  ),
-        .MemDout   	( MemDout    ),
-        .src1      	( src1       ),
-        .src2      	( src2       ),
-        .imm       	( imm        ),
-        .MemRead   	( MemRead    ),
-        .MemWrite  	( MemWrite   ),
-        .ALUSrcA   	( ALUSrcA    ),
-        .ALUSrcB   	( ALUSrcB    )
+        .clk       	( clk       ),
+        .pc         ( pc        ),
+        .inst      	( inst      ),
+        .ALUResult 	( ALUResult ),
+        .MemDout   	( MemDout   ),
+        .src1      	( src1      ),
+        .src2      	( src2      ),
+        .imm       	( imm       ),
+        .JumpAddr   ( JumpAddr  ),
+        .MemRead   	( MemRead   ),
+        .MemWrite  	( MemWrite  ),
+        .Jump       ( Jump      ),
+        .Branch     ( Branch    ),
+        .ALUSrcA   	( ALUSrcA   ),
+        .ALUSrcB   	( ALUSrcB   )
     );
 
     EXU u_EXU(
