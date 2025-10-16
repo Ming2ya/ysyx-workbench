@@ -14,7 +14,7 @@ module top(
     wire [31:0] src2;
     wire [31:0] imm;
     wire [31:0] ALUResult;
-    wire        ALUSrcA;
+    wire [1:0]  ALUSrcA;
     wire [1:0]  ALUSrcB;
 
     IFU u_IFU(

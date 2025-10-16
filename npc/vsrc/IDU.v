@@ -13,7 +13,7 @@ module IDU(
     output MemWrite,
     output Jump,
     output Branch,
-    output ALUSrcA,
+    output [1:0] ALUSrcA,
     output [1:0] ALUSrcB
     );
 
@@ -81,7 +81,8 @@ module IDU(
         .rs2data 	( src2     )
     );
 
-    assign ALUSrcA = JAL | JALR | AUIPC;
+    assign ALUSrcA[0] = JAL | JALR | AUIPC;
+    assign ALUSrcA[1] = LUI;
     assign ALUSrcB[0] = ~(R_type | JAL | JALR);
     assign ALUSrcB[1] = JAL | AUIPC;
 
