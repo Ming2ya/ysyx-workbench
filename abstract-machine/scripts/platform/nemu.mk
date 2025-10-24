@@ -16,6 +16,9 @@ NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt
 ifndef TRACE
 NEMUFLAGS += -b			#AM自动进入batch modes
 endif
+ifdef  TRACE
+NEMUFLAGS += -f $(IMAGE).elf
+endif
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
