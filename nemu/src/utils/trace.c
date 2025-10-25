@@ -79,20 +79,23 @@ void init_elf(const char *elf_file){
 
 static int f_depth = 0;
 static int f_len = 0;
-//static char f_log[256][80];
+static char f_log[512][80];
 
 static void ftrace_call(vaddr_t pc, vaddr_t npc){
     char *name;
     for (int i = 0; i < func_num; i++){
         if (func_tab[i].st_value == npc){
             name = func_name + func_tab[i].st_name;
-            printf("0x%08x: %*scall [%s@0x%08x]\n", pc, 2*f_depth, "", name, npc);
+            sprintf(f_log[f_len], "0x%08x: %*scall [%s@0x%08x]\n", pc, 2*f_depth, "", name, npc);
             f_depth += 1;
             f_len += 1;
             return;
         }
     }
-    printf("0x%08x: %*scall [???@0x%08x]\n", pc,2*f_depth, "", npc);
+    sprintf(f_log[f_len], "0x%08x: %*scall [???@0x%08x]\n", pc,2*f_depth, "", npc);
+    f_depth += 1;
+    f_len += 1;
+    Assert(f_len < 512, "ftrace log buf overflow!");
 }
 
 static void ftrace_ret(vaddr_t pc, vaddr_t npc){
@@ -101,12 +104,15 @@ static void ftrace_ret(vaddr_t pc, vaddr_t npc){
         if (func_tab[i].st_value <= pc && func_tab[i].st_value + func_tab[i].st_size >= pc){
             name = func_name + func_tab[i].st_name;
             f_depth -= 1;
-            printf("0x%08x: %*sret  [%s]\n", pc,2*f_depth, "", name);
+            sprintf(f_log[f_len], "0x%08x: %*sret  [%s]\n", pc,2*f_depth, "", name);
             f_len += 1;
             return;
         }
     }
-    printf("0x%08x: %*sret  [???]\n", pc, 2*f_depth, "");
+    f_depth -= 1;
+    sprintf(f_log[f_len], "0x%08x: %*sret  [???]\n", pc, 2*f_depth, "");
+    f_len += 1;
+    Assert(f_len < 512, "ftrace log buf overflow!");
 }
 
 void ftrace_main(Decode *s, vaddr_t npc){
@@ -133,5 +139,7 @@ void ftrace_main(Decode *s, vaddr_t npc){
 
 void ftrace_print(){
     Log("Function Trace:");
-
+    for (int i = 0; i < f_len; i ++){
+        printf("%s", f_log[i]);
+    }
 }
