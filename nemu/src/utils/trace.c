@@ -19,9 +19,9 @@ void ringtrace_print() {
 }
 
 static FILE *elf_fp = NULL;
-static Elf32_Sym func_tab[100];
+static Elf32_Sym *func_tab;
 static int func_num = 0;
-static char func_name[1024];
+static char *func_name;
 
 static void elf_parser(){
     Elf32_Ehdr *ehdr;
@@ -42,11 +42,13 @@ static void elf_parser(){
     for (int i = 0; i < ehdr->e_shnum; i++){
         if (shdr[i].sh_type == SHT_SYMTAB && !strcmp(shstrtab + shdr[i].sh_name, ".symtab")){
             sym = malloc(shdr[i].sh_size);
+            func_tab = malloc(shdr[i].sh_size);
             fseek(elf_fp, shdr[i].sh_offset, SEEK_SET);
             sym_len = shdr[i].sh_size / sizeof(Elf32_Sym);
             Assert(fread(sym, sizeof(Elf32_Sym), sym_len, elf_fp) == sym_len, "Read elf symtab failed!");
         }
         if (shdr[i].sh_type == SHT_STRTAB && !strcmp(shstrtab + shdr[i].sh_name, ".strtab")){
+            func_name = malloc(shdr[i].sh_size);
             fseek(elf_fp, shdr[i].sh_offset, SEEK_SET);
             Assert(fread(func_name, sizeof(char), shdr[i].sh_size / sizeof(char), elf_fp) == shdr[i].sh_size / sizeof(char), "Read elf strtab failed!");
         }
@@ -138,6 +140,8 @@ void ftrace_main(Decode *s, vaddr_t npc){
 }
 
 void ftrace_print(){
+    free(func_name);
+    free(func_tab);
     Log("Function Trace:");
     for (int i = 0; i < f_len; i ++){
         printf("%s", f_log[i]);
