@@ -15,6 +15,12 @@ size_t strlen(const char *s) {
 
 char *strcpy(char *dst, const char *src) {
   size_t i;
+  size_t len = strlen(src) + 1; // '\0' 算入
+
+  if ((dst <= src && dst + len > src) || (dst >= src && dst - len < src)){
+    panic("strcpy strings must not overlap");
+  }
+
   for (i = 0; src[i] != '\0'; i++){
     dst[i] = src[i];
   }
@@ -25,6 +31,10 @@ char *strcpy(char *dst, const char *src) {
 
 char *strncpy(char *dst, const char *src, size_t n) {
   size_t i;
+
+  if ((dst <= src && dst + n > src) || (dst >= src && dst - n < src)){
+    panic("strncpy strings must not overlap");
+  }
   for (i = 0; i < n && src[i] != '\0'; i++){
     dst[i] = src[i];
   }
@@ -83,17 +93,22 @@ void *memset(void *s, int c, size_t n) {
 
 void *memmove(void *dst, const void *src, size_t n) {
   size_t i;
+  uint8_t temp[n];
 
   for (i = 0; i < n; i ++){
-    *((uint8_t *)dst + i) = *((uint8_t *)src + i);
+    temp[i] = *((uint8_t *)src + i);
+  }
+
+  for (i = 0; i < n; i ++){
+    *((uint8_t *)dst + i) = temp[i];
   }
 
   return dst;
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-  if (out - n < in || out + n > in)
-    assert(0);          //must not overlap
+  if ((out >= in && out - n < in) || (out <= in && out + n > in))
+    panic("memcpy mem must not overlap");
 
   size_t i;
   for (i = 0; i < n; i ++){
