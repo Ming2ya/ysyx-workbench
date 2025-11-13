@@ -2,6 +2,7 @@
 #include <elf.h>
 #include <cpu/decode.h>
 
+#ifdef CONFIG_RINGTRACE
 static char ringbuf[CONFIG_RINGTRACE_LENGTH][128];
 static int ringhead = 0;
 
@@ -13,11 +14,14 @@ void ringtrace_add(char* log) {
 void ringtrace_print() {
     Log("Instruction Ring Trace:");
     for (int i = 0; i < CONFIG_RINGTRACE_LENGTH; i ++) {
-        puts(ringbuf[ringhead]);
+        if (ringbuf[ringhead][0] != '\0') puts(ringbuf[ringhead]);
         ringhead = (ringhead + 1) % CONFIG_RINGTRACE_LENGTH;
     }
 }
+#endif
 
+
+#ifdef CONFIG_FTRACE
 static FILE *elf_fp = NULL;
 static Elf32_Sym *func_tab;
 static int func_num = 0;
@@ -147,3 +151,4 @@ void ftrace_print(){
         printf("%s", f_log[i]);
     }
 }
+#endif

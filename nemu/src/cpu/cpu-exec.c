@@ -43,13 +43,13 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
-  if (CONFIG_IRINGTRACE) ringtrace_add(_this->logbuf);
-  if (CONFIG_WATCHPOINT){
+  IFDEF(CONFIG_IRINGTRACE, ringtrace_add(_this->logbuf));
+  IFDEF(CONFIG_WATCHPOINT, {
     if (!diff_wp()){
         puts(_this->logbuf);
         nemu_state.state = NEMU_STOP;
     }
-  }
+  })
   IFDEF(CONFIG_FTRACE, ftrace_main(_this, dnpc));
 }
 
@@ -131,7 +131,7 @@ void cpu_exec(uint64_t n) {
 
     case NEMU_ABORT:
       Log("nemu: %s at pc = " FMT_WORD, ANSI_FMT("ABORT", ANSI_FG_RED), nemu_state.halt_pc);
-      ringtrace_print(); statistic(); ftrace_print(); break;
+      IFDEF(CONFIG_RINGTRACE, ringtrace_print()); statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); break;
     case NEMU_END:
       Log("nemu: %s at pc = " FMT_WORD,
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
