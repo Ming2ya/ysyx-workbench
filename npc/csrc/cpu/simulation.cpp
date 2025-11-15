@@ -1,7 +1,7 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 #include "Vtop.h"
-#include "paddr.h"
+#include "memory/paddr.h"
 
 static int sim_time;
 static Vtop *dut = NULL;
@@ -36,9 +36,20 @@ static void cycle(int n) {
     }
 }
 
-void exec_once() {
+static void exec_once() {
     dut->inst = pmem_read(dut->pc, 4);
     single_cyc();
+}
+
+static void execute(uint64_t n){
+    for (; n > 0; n --){
+        exec_once();
+        if (dut->state != NEMU_RUNNING) break;
+    }
+}
+
+void cpu_exec(uint64_t n){
+    execute(n);
 }
 
 void init_cpu() {

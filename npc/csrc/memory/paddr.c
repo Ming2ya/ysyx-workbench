@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "paddr.h"
+#include "memory/paddr.h"
 
 static uint8_t pmem[MSIZE] __attribute((aligned(4096)))= {};
 

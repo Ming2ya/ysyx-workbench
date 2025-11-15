@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "paddr.h"
+#include "memory/paddr.h"
 
 void init_mem();
 void init_sim();

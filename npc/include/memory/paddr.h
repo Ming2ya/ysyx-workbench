@@ -1,5 +1,7 @@
-#ifndef __PADDR_H__
-#define __PADDR_H__
+//Refer to nemu
+
+#ifndef __MEMORY_PADDR_H__
+#define __MEMORY_PADDR_H__
 
 #include "common.h"
 

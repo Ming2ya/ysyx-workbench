@@ -3,10 +3,12 @@ GUEST_ISA = $(ISA)
 NAME = $(GUEST_ISA)-npc
 TOPNAME = top
 
-CSRCS = $(abspath ./csrc/*.c) $(abspath ./csrc/*.cpp)
-VSRCS = $(abspath ./vsrc/*.v)
+CSRCS := $(shell find $(abspath ./csrc) -name '*.c' -or -name '*.cpp')
+VSRCS := $(shell find $(abspath ./vsrc) -name '*.v')
+INC_PATH := $(NPC_HOME)/csrc/include $(INC_PATH)
 
 CFLAGS += -Og -ggdb3
+CFLAGS += $(addprefix -I, $(INC_PATH))
 VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME)
 
 BUILD_DIR = $(NPC_HOME)/build

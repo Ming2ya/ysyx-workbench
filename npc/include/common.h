@@ -1,3 +1,5 @@
+//Refer to nemu
+
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
@@ -5,7 +7,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include "macro.h"
 #include <assert.h>
 #include <stdlib.h>
 
