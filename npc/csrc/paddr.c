@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "memory.h"
+#include "paddr.h"
 
 static uint8_t pmem[MSIZE] = {};
 
@@ -20,7 +20,9 @@ word_t pmem_read(paddr_t addr, int len){
     return ret;
 }
 
-
+void init_mem(){
+    
+}
 
 void pmem_init(){
     *(uint32_t *)(pmem + 0) = 0x00000493;  // addi s1, zero, 0 (initialize s1 to 0)

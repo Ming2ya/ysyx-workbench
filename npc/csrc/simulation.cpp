@@ -1,33 +1,44 @@
+#include <verilated.h>
 #include <verilated_vcd_c.h>
 #include "Vtop.h"
-#include "memory.h"
+#include "paddr.h"
 
-static int sim_time = 0;
+static int sim_time;
+static Vtop *dut = NULL;
+static VerilatedVcdC *vcd = NULL;
+
+void init_sim(){
+    dut = new Vtop;
+    vcd = new VerilatedVcdC;
+    Verilated::traceEverOn(true);
+    dut->trace(vcd, 5);
+    vcd->open("wave.vcd");
+}
 
 static void update_time(){
     sim_time += 5;
 }
 
-static void single_cyc(Vtop* top, VerilatedVcdC* vcd) {
-    top->clk = 1; top->eval(); vcd->dump(sim_time); update_time();
-    top->clk = 0; top->eval(); vcd->dump(sim_time); update_time();
+static void single_cyc() {
+    dut->clk = 1; dut->eval(); vcd->dump(sim_time); update_time();
+    dut->clk = 0; dut->eval(); vcd->dump(sim_time); update_time();
 }
 
-static void cycle(Vtop* top, VerilatedVcdC* vcd, int n) {
+static void cycle(int n) {
     for (int i = 0; i < n; i ++) {
-        single_cyc(top, vcd);
+        single_cyc();
     }
 }
 
-void exec_once(Vtop* top, VerilatedVcdC* vcd) {
-    top->inst = pmem_read(top->pc, 4);
-    single_cyc(top, vcd);
+void exec_once() {
+    dut->inst = pmem_read(dut->pc, 4);
+    single_cyc();
 }
 
-void cpu_init(Vtop* top, VerilatedVcdC* vcd) {
-    single_cyc(top, vcd);
-    top->clk = 0;
-    top->reset = 1;
-    cycle(top, vcd, 3);
-    top->reset = 0;
+void init_cpu() {
+    single_cyc();
+    dut->clk = 0;
+    dut->reset = 1;
+    cycle(3);
+    dut->reset = 0;
 }
