@@ -12,7 +12,13 @@ void init_sim(){
     vcd = new VerilatedVcdC;
     Verilated::traceEverOn(true);
     dut->trace(vcd, 5);
-    vcd->open("wave.vcd");
+    vcd->open("build/wave.vcd");
+}
+
+void close_sim(){
+    vcd->dump(sim_time);
+    dut->final();
+    vcd->close();
 }
 
 static void update_time(){

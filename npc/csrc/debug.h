@@ -1,7 +1,7 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
-#include <common.h>
+#include "common.h"
 #include <stdio.h>
 
 #define ANSI_FG_BLACK   "\33[1;30m"
