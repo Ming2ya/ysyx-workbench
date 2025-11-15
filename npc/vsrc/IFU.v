@@ -1,6 +1,7 @@
 module IFU(
     input         clk,
     input         rst,
+    input         halt,
     input         Jump,
     input         Branch,
     input  [31:0] JumpAddr,
@@ -27,7 +28,7 @@ module IFU(
         .rst  	(rst   ),
         .din  	(pc_in ),
         .dout 	(pc    ),
-        .wen  	(1'b1  )
+        .wen  	(~halt )
     );
     
 endmodule

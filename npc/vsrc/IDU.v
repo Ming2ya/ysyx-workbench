@@ -13,6 +13,7 @@ module IDU(
     output MemWrite,
     output Jump,
     output Branch,
+    output Ebreak,
     output [1:0] ALUSrcA,
     output [1:0] ALUSrcB
     );
@@ -29,6 +30,7 @@ module IDU(
     assign LUI = (op == 7'h37);
     assign AUIPC = (op == 7'h17);
     assign JAL = (op == 7'h6F);
+    assign Ebreak = (op == 7'h73);
 
     wire [8:0] inst_type;
     assign inst_type = {R_type, I_type, B_type, LW, JALR, SW, LUI, AUIPC, JAL};
