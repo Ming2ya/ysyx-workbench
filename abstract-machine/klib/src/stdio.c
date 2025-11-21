@@ -5,6 +5,7 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 char *itoa(int value, char* s);
+#define is_digit(c) c >= '0' && c <= '9'
 
 int printf(const char *fmt, ...) {
   va_list ap;
@@ -13,9 +14,15 @@ int printf(const char *fmt, ...) {
   char c;
   int i = 0;
   int cnt = 0;
-  // char* flags = "+_#0";
-  // int width;
-  // 控制选项待实现 
+  // printf格式 %[argument$][flags][width][.precision][length modifier]conversion
+  char* flags = "#0- +";
+  struct {
+    char pad;
+    char align;
+    int width;
+  } padding;
+  //char* conversions = "sdc%";
+  // argument$ precision length-modifier 未实现
 
   va_start(ap, fmt);
   while(fmt[i] != '\0'){
@@ -25,28 +32,87 @@ int printf(const char *fmt, ...) {
     }
     else {
       i += 1;
+      padding.pad = ' ';  
+      padding.align = '+';
+      padding.width = 0;
+      // flags
+      while (strchr(flags, fmt[i]) != NULL) {
+        switch (fmt[i]) {
+          case '#':
+            assert(0);  //与#相关的类型未实现
+          case '0':
+            padding.pad = '0';
+            break;
+          case '-':
+            padding.align = '-';
+            break;
+          case ' ':
+            assert(0);  // 未实现
+          case '+':
+            assert(0);  // 未实现
+        }
+        i += 1;
+      }
+      // field width
+      int len = 0;
+      char digit[8];
+      while (is_digit(fmt[i])) {
+        digit[len] = fmt[i];
+        i ++; len ++;
+      }
+      digit[len] = '\0';
+      padding.width = atoi(digit);
+      // conversion
       switch (fmt[i]) {
+        int len;
         case 's':
           s = va_arg(ap, char*);
-          cnt += strlen(s);
-          putstr(s);
+          len = strlen(s);
+          if (len >= padding.width) {
+            cnt += len;
+            putstr(s);
+          }
+          else {
+            cnt += padding.width;
+            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
+            putstr(s);
+            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
+          }
           break;
         case 'd':
           d = va_arg(ap, int);
           char digit[12];
           s = itoa(d, digit);
-          cnt += strlen(s);
-          putstr(s);
+          len = strlen(s);
+          if (len >= padding.width) {
+            cnt += len;
+            putstr(s);
+          }
+          else {
+            cnt += padding.width;
+            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
+            putstr(s);
+            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
+          }
           break;
         case 'c':
           c = va_arg(ap, int);
-          cnt += 1;
-          putch(c);
+          if (padding.width <= 1){
+            cnt += 1;
+            putch(c);
+          }
+          else {
+            cnt += padding.width;
+            if (padding.align == '+') for (int i = 0; i < padding.width - 1; i ++) putch(padding.pad);
+            putch(c);
+            if (padding.align == '-') for (int i = 0; i < padding.width - 1; i ++) putch(padding.pad);
+          }
           break;
         case '%':
           putch('%');
           cnt += 1;
           break;
+        default: assert(0);  // 未实现或未知类型
       }
       i += 1;
     }
