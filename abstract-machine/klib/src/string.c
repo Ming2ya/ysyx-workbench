@@ -82,6 +82,15 @@ int strncmp(const char *s1, const char *s2, size_t n) {
   else return 0;
 }
 
+char *strchr(char *s, char c) {
+  int i = 0;
+  while (s[i]) {
+    if (s[i] == c) return s + i;
+    i ++;
+  }
+  return (s[i] == c) ? s + i : NULL;
+}
+
 void *memset(void *s, int c, size_t n) {
   uint8_t* p = (uint8_t *)s;
   while (n--){
