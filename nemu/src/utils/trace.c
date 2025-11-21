@@ -90,6 +90,7 @@ static char f_log[F_LEN][80];
 
 static void ftrace_call(vaddr_t pc, vaddr_t npc){
     char *name;
+    Assert(f_len < F_LEN, "ftrace log buf overflow!");
     for (int i = 0; i < func_num; i++){
         if (func_tab[i].st_value == npc){
             name = func_name + func_tab[i].st_name;
@@ -102,11 +103,11 @@ static void ftrace_call(vaddr_t pc, vaddr_t npc){
     snprintf(f_log[f_len], 80, "0x%08x: %*scall [???@0x%08x]\n", pc,2*f_depth, "", npc);
     f_depth += 1;
     f_len += 1;
-    Assert(f_len < F_LEN, "ftrace log buf overflow!");
 }
 
 static void ftrace_ret(vaddr_t pc, vaddr_t npc){
     char *name;
+    Assert(f_len < F_LEN, "ftrace log buf overflow!");
     for (int i = 0; i < func_num; i ++){
         if (func_tab[i].st_value <= pc && func_tab[i].st_value + func_tab[i].st_size >= pc){
             name = func_name + func_tab[i].st_name;
@@ -119,7 +120,6 @@ static void ftrace_ret(vaddr_t pc, vaddr_t npc){
     f_depth -= 1;
     snprintf(f_log[f_len], 80, "0x%08x: %*sret  [???]\n", pc, 2*f_depth, "");
     f_len += 1;
-    Assert(f_len < F_LEN, "ftrace log buf overflow!");
 }
 
 void ftrace_main(Decode *s, vaddr_t npc){
