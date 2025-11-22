@@ -4,31 +4,41 @@
 #include <stdarg.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
-char *itoa(int value, char* s);
+char *itoa(int value, char* s, int base);
 #define is_digit(c) c >= '0' && c <= '9'
 
 int printf(const char *fmt, ...) {
+  char buf[1024];
+
   va_list ap;
+  va_start(ap, fmt);
+  int i = vsprintf(buf, fmt, ap);
+  va_end(ap);
+
+  putstr(buf);
+  return i;
+}
+
+int vsprintf(char *out, const char *fmt, va_list ap) {
+  int i = 0, k = 0;
   char *s;
   int d;
   char c;
-  int i = 0;
-  int cnt = 0;
   // printf格式 %[argument$][flags][width][.precision][length modifier]conversion
+  //char* argument = "*$";
   char* flags = "#0- +";
   struct {
     char pad;
     char align;
     int width;
   } padding;
-  //char* conversions = "sdc%";
+  //char* conversions = "sdxc%";
   // argument$ precision length-modifier 未实现
 
-  va_start(ap, fmt);
   while(fmt[i] != '\0'){
     if (fmt[i] != '%') {
-      putch(fmt[i]);
-      i += 1; cnt += 1;
+      out[k] = fmt[i];
+      k ++; i ++;
     }
     else {
       i += 1;
@@ -55,109 +65,69 @@ int printf(const char *fmt, ...) {
       }
       // field width
       int len = 0;
-      char digit[8];
+      char digit[32];
       while (is_digit(fmt[i])) {
         digit[len] = fmt[i];
         i ++; len ++;
       }
       digit[len] = '\0';
       padding.width = atoi(digit);
-      // conversion
+      //conversion
       switch (fmt[i]) {
         int len;
         case 's':
           s = va_arg(ap, char*);
           len = strlen(s);
           if (len >= padding.width) {
-            cnt += len;
-            putstr(s);
+            while(*s) out[k++] = *s++;
           }
           else {
-            cnt += padding.width;
-            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
-            putstr(s);
-            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
+            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) out[k++] = padding.pad;
+            while(*s) out[k++] = *s++;
+            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) out[k++] = padding.pad;
           }
           break;
         case 'd':
           d = va_arg(ap, int);
-          char digit[12];
-          s = itoa(d, digit);
+          s = itoa(d, digit, 10);
           len = strlen(s);
           if (len >= padding.width) {
-            cnt += len;
-            putstr(s);
+            while(*s) out[k++] = *s++;
           }
           else {
-            cnt += padding.width;
-            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
-            putstr(s);
-            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) putch(padding.pad);
+            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) out[k++] = padding.pad;
+            while(*s) out[k++] = *s++;
+            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) out[k++] = padding.pad;
+          }
+          break;
+        case 'x':
+          d = va_arg(ap, int);
+          s = itoa(d, digit, 16);
+          len = strlen(s);
+          if (len >= padding.width) {
+            while(*s) out[k++] = *s++;
+          }
+          else {
+            if (padding.align == '+') for (int i = 0; i < padding.width - len; i ++) out[k++] = padding.pad;
+            while(*s) out[k++] = *s++;
+            if (padding.align == '-') for (int i = 0; i < padding.width - len; i ++) out[k++] = padding.pad;
           }
           break;
         case 'c':
           c = va_arg(ap, int);
           if (padding.width <= 1){
-            cnt += 1;
-            putch(c);
+            out[k++] = c;
           }
           else {
-            cnt += padding.width;
-            if (padding.align == '+') for (int i = 0; i < padding.width - 1; i ++) putch(padding.pad);
-            putch(c);
-            if (padding.align == '-') for (int i = 0; i < padding.width - 1; i ++) putch(padding.pad);
+            if (padding.align == '+') for (int i = 0; i < padding.width - 1; i ++) out[k++] = padding.pad;
+            out[k++] = c;
+            if (padding.align == '-') for (int i = 0; i < padding.width - 1; i ++) out[k++] = padding.pad;
           }
           break;
         case '%':
-          putch('%');
-          cnt += 1;
+          out[k++] = '%';
           break;
         default: assert(0);  // 未实现或未知类型
-      }
-      i += 1;
-    }
-  }
-  va_end(ap);
-  return cnt;
-}
-
-int vsprintf(char *out, const char *fmt, va_list ap) {
-  int i = 0, k = 0;
-  char *s;
-  int d;
-  char c;
-
-  while(fmt[i] != '\0'){
-    if (fmt[i] != '%') {
-      out[k] = fmt[i];
-      k ++; i ++;
-    }
-    else {
-      i += 1;
-      switch (fmt[i]) {
-        case 's':
-          s = va_arg(ap, char*);
-          while (*s != '\0') {
-            out[k++] = *s++;
-          }
-          break;
-        case 'd':
-          d = va_arg(ap, int);
-          char digit[12];
-          s = itoa(d, digit);
-          while (*s != '\0') {
-            out[k++] = *s++;
-          }
-          break;
-        case 'c':
-          c = va_arg(ap, int);
-          out[k] = c;
-          k += 1;
-          break;
-        case '%':
-          out[k] = '%';
-          k += 1;
-          break;
       }
       i += 1;
     }

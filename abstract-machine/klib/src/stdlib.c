@@ -29,9 +29,10 @@ int atoi(const char* nptr) {
   return x;
 }
 
-char *itoa(int value, char* s) {
+char *itoa(int value, char* s, int base) {
+    assert(base > 1 && base < 36);      // 使用数字和字母表示的进制范围
     int i = 0, k = 0;
-    char temp[12];
+    char temp[32];
     if (value < 0){
         value = -value;
         s[i] = '-';
@@ -43,8 +44,9 @@ char *itoa(int value, char* s) {
         return s;
     }
     while (value > 0){
-        temp[k] = '0' + value % 10;
-        value = value / 10;
+        int digit = value % base;
+        temp[k] = (digit < 10) ? ('0' + digit) : ('A' + digit - 10);
+        value = value / base;
         k ++;
     }
     while (k > 0) {
