@@ -163,3 +163,14 @@ void ftrace_print(){
     }
 }
 #endif
+
+#ifdef CONFIG_DTRACE
+void dtrace_read(vaddr_t addr, int len, word_t data, char *name){
+    Log("Read from %s at " FMT_PADDR ": " FMT_WORD, name, addr, data);
+}
+
+void dtrace_write(vaddr_t addr, int len, word_t data, char *name){
+    Log("Write to %s at " FMT_PADDR ": " FMT_WORD, name, addr, data);
+}
+
+#endif
