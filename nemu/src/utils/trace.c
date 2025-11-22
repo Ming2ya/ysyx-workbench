@@ -20,6 +20,16 @@ void ringtrace_print() {
 }
 #endif
 
+#ifdef CONFIG_MTRACE
+void mtrace_read(vaddr_t addr, int len, word_t data){
+    Log("read " FMT_PADDR ": " FMT_WORD, addr, data);
+}
+
+void mtrace_write(vaddr_t addr, int len, word_t data){
+    Log("write " FMT_PADDR ": " FMT_WORD, addr, data);
+}
+
+#endif
 
 #ifdef CONFIG_FTRACE
 static FILE *elf_fp = NULL;
