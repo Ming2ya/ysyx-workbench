@@ -25,7 +25,7 @@ enum {
   TK_NOTYPE = 256, TK_EQ,
 
   /* TODO: Add more token types */
-  TK_DECIMAL, TK_HEX, TK_NE, TK_REG, TK_DEREF
+  TK_DECIMAL, TK_HEX, TK_NE, TK_GE, TK_LE, TK_REG, TK_DEREF
 };
 
 struct result {     //struct的static是只能在构造后面创建变量，有没有像函数static那样只能在本文件内访问的方法？
@@ -52,7 +52,7 @@ static struct rule {
   {" +", TK_NOTYPE, -2},            // spaces
   {"\\+", '+', 4},                  // plus
   {"==", TK_EQ, 7},                 // equal
-  {"0x[0-9]+", TK_HEX, -1},         // hexdecimal_number
+  {"0x[0-9a-f]+", TK_HEX, -1},      // hexdecimal_number
   {"[0-9]+", TK_DECIMAL, -1},       // decimal_number
   {"-", '-', 4},
   {"\\*", '*', 3},
@@ -60,9 +60,14 @@ static struct rule {
   {"\\(", '(', -1},
   {"\\)", ')', -1},
   {"!=", TK_NE, 7},
+  {">=", TK_GE, 6},
+  {"<=", TK_LE, 6},
+  {">", '>', 6},
+  {"<", '<', 6},
   {"&&", '&', 11},
+  {"\\|\\|", '|', 12},
   {"\\$[a-z]*[0-9]*",TK_REG, -1},
-  {"", TK_DEREF, 2}
+  //{"", TK_DEREF, 2}
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -231,11 +236,13 @@ static int find_main_op(int p, int q){
             Warn("Bad parentheses");
             return -2;
         }
-        else if (depth > 0 || tokens[i].priority < main_priority )
+        else if (depth > 0)
             continue;
-        else {
-            main_op = i;
-            main_priority = tokens[i].priority;
+        else {      //depth == 0
+            if (tokens[i].priority > main_priority){
+                main_op = i;
+                main_priority = tokens[i].priority;
+            }
         }
     }
     if (main_op < 0){
@@ -270,19 +277,6 @@ static struct result eval(int p, int q){
         val.err = true;
         return val;
     }
-    else if (tokens[p].priority == 2){          //单目运算
-        int op = p;
-        struct result val1 = eval(p + 1, q);
-        if (val1.err == true)
-            return val1;
-        switch(tokens[op].type){
-            case TK_DEREF: val.ok = paddr_read(val1.ok, 4); break;
-            default: 
-                Warn("No match operator");
-                val.err = true;
-        }
-        return val;
-    }
     else {
         int op = find_main_op(p, q);
         if (op < 0){
@@ -294,31 +288,50 @@ static struct result eval(int p, int q){
             val.err = true;
             return val;
         }
-        struct result val1 = eval(p, op - 1);
-        struct result val2 = eval(op + 1, q);
-        if (val1.err == true)
-            return val1;
-        if (val2.err == true)
-            return val2;
-        IFONE(EXPR_LOG, printf("val1 = %u\n", val1.ok));
-        IFONE(EXPR_LOG, printf("val2 = %u\n", val2.ok));
-        switch (tokens[op].type){
-            case '+': val.ok = val1.ok + val2.ok; break;
-            case '-': val.ok = val1.ok - val2.ok; break;
-            case '*': val.ok = val1.ok * val2.ok; break;
-            case '/': 
-                if (val2.ok == 0){
-                    Warn("div 0 error");
+        if (tokens[op].priority == 2){
+            struct result val1 = eval(op + 1, q);
+            if (val1.err == true)
+                return val1;
+            IFONE(EXPR_LOG, printf("val1 = %u\n", val1.ok));
+            switch (tokens[op].type){
+                case TK_DEREF: val.ok = paddr_read(val1.ok, 4); break;
+                default: 
+                    Warn("No match operator");
                     val.err = true;
-                    return val;
-                }
-                val.ok =  val1.ok / val2.ok; break;
-            case TK_EQ: val.ok = val1.ok == val2.ok; break;
-            case TK_NE: val.ok = val1.ok != val2.ok; break;
-            case '&': val.ok = val1.ok && val2.ok; break;
-            default: 
-                Warn("No match operator");
-                val.err = true;
+            }
+        }
+        else{
+            struct result val1 = eval(p, op - 1);
+            struct result val2 = eval(op + 1, q);
+            if (val1.err == true)
+                return val1;
+            if (val2.err == true)
+                return val2;
+            IFONE(EXPR_LOG, printf("val1 = %u\n", val1.ok));
+            IFONE(EXPR_LOG, printf("val2 = %u\n", val2.ok));
+            switch (tokens[op].type){
+                case '+': val.ok = val1.ok + val2.ok; break;
+                case '-': val.ok = val1.ok - val2.ok; break;
+                case '*': val.ok = val1.ok * val2.ok; break;
+                case '/': 
+                    if (val2.ok == 0){
+                        Warn("div 0 error");
+                        val.err = true;
+                        return val;
+                    }
+                    val.ok =  val1.ok / val2.ok; break;
+                case TK_EQ: val.ok = val1.ok == val2.ok; break;
+                case TK_NE: val.ok = val1.ok != val2.ok; break;
+                case TK_GE: val.ok = val1.ok >= val2.ok; break;
+                case TK_LE: val.ok = val1.ok <= val2.ok; break;
+                case '>': val.ok = val1.ok > val2.ok; break;
+                case '<': val.ok = val1.ok < val2.ok; break;
+                case '&': val.ok = val1.ok && val2.ok; break;
+                case '|': val.ok = val1.ok || val2.ok; break;
+                default: 
+                    Warn("No match operator");
+                    val.err = true;
+            }
         }
         return val;
     }
