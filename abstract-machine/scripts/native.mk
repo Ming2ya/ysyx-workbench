@@ -17,6 +17,12 @@ ASFLAGS += -fpie -pie
 comma = ,
 LDFLAGS_CXX = $(addprefix -Wl$(comma), $(LDFLAGS)) -pie -ldl $(shell sdl2-config --libs)
 
+ifneq ($(DEBUG),0)
+	CFLAGS += -g -O0
+	ASFLAGS += -g
+	LDFLAGS_CXX += -g
+endif
+
 run: image
 	$(IMAGE).elf
 

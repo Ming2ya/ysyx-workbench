@@ -118,10 +118,10 @@ bool diff_wp(){
         val = expr(node->expr, NULL);
         if (!strcmp(node->type, "watchpoint")){
             if (val != node->pre_val){
-                node->pre_val = val;
                 printf("Watchpoint %d: %s\n", node->NO, node->expr);
                 printf("Old value = %u\n", node->pre_val);
                 printf("New value = %u\n", val);
+                node->pre_val = val;
                 return false;
             }
         }
