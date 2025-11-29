@@ -5,7 +5,7 @@ TOPNAME = top
 
 CSRCS := $(shell find $(abspath ./csrc) -name '*.c' -or -name '*.cpp')
 VSRCS := $(shell find $(abspath ./vsrc) -name '*.v')
-INC_PATH := $(NPC_HOME)/csrc/include $(INC_PATH)
+INC_PATH := $(NPC_HOME)/include $(VERILATOR_ROOT)/include $(INC_PATH)
 
 CFLAGS += -Og -ggdb3
 CFLAGS += $(addprefix -I, $(INC_PATH))

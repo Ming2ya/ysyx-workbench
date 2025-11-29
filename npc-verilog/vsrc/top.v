@@ -19,15 +19,15 @@ module top(
     wire [1:0]  ALUSrcA;
     wire [1:0]  ALUSrcB;
 
-localparam NEMU_RUNNING = 3'd0;
-localparam NEMU_STOP    = 3'd1;
-localparam NEMU_END     = 3'd2;
-localparam NEMU_ABORT   = 3'd3;
-localparam NEMU_QUIT    = 3'd4;
+localparam NPC_RUNNING = 3'd0;
+localparam NPC_STOP    = 3'd1;
+localparam NPC_END     = 3'd2;
+localparam NPC_ABORT   = 3'd3;
+localparam NPC_QUIT    = 3'd4;
 
     wire [2:0] cur_state, next_state;
 
-    assign next_state = (Ebreak) ? NEMU_END: NEMU_RUNNING;
+    assign next_state = (Ebreak) ? NPC_END: NPC_RUNNING;
     
     Reg #(3, 3'd0)
     cur_state_Reg (
@@ -39,7 +39,7 @@ localparam NEMU_QUIT    = 3'd4;
     );
     assign state = cur_state;
 
-    wire halt = (cur_state != NEMU_RUNNING);
+    wire halt = (cur_state != NPC_RUNNING);
 
 
     IFU u_IFU(

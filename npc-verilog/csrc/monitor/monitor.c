@@ -3,7 +3,7 @@
 
 void init_mem();
 void init_sim();
-void init_cpu();
+void init_isa();
 
 static char* img_file = NULL;
 
@@ -49,8 +49,8 @@ static int parse_args(int argc, char *argv[]) {
 
 void init_monitor(int argc, char *argv[]){
     parse_args(argc, argv);
-    init_mem();
-    long img_size = load_img();
     init_sim();
-    init_cpu();
+    init_mem();
+    init_isa();
+    long img_size = load_img();
 }
