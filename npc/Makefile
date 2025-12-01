@@ -1,4 +1,4 @@
-BUILD_DIR = ./build
+BUILD_DIR = $(NPC_HOME)/build
 
 PRJ = playground
 
@@ -30,8 +30,24 @@ clean:
 
 .PHONY: test verilog help reformat checkformat clean
 
-sim:
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Write this Makefile by yourself."
+ISA ?= riscv32e
+GUEST_ISA = $(ISA)
+NAME = $(GUEST_ISA)-npc
+TOPNAME = Top
+
+OBJ_DIR = $(BUILD_DIR)/obj-$(NAME)
+BINARY = $(BUILD_DIR)/$(NAME)
+
+CSRCS := $(shell find $(abspath ./csrc) -name '*.c' -or -name '*.cc')
+VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPIC.sv
+INC_PATH := $(NPC_HOME)/include $(VERILATOR_ROOT)/include $(OBJ_DIR) $(INC_PATH)
+INC_PATH += $(NPC_HOME)/csrc/isa/riscv32e/include
+
+CFLAGS += -Og -ggdb3
+CFLAGS += $(addprefix -I, $(INC_PATH))
+CFLAGS += -D__GUEST_ISA__=$(GUEST_ISA)
+VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME) -sv --LDFLAGS -Wl,--no-relax
+	
+include $(NPC_HOME)/scripts/sim.mk
 
 -include ../Makefile
