@@ -15,15 +15,23 @@
 
 #include <common.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
+extern uint64_t g_nr_guest_inst;
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
+#ifndef CONFIG_TARGET_AM
+FILE *log_fp = NULL;
+
+void init_log(const char *log_file) {
+  log_fp = stdout;
+  if (log_file != NULL) {
+    FILE *fp = fopen(log_file, "w");
+    Assert(fp, "Can not open '%s'", log_file);
+    log_fp = fp;
+  }
+  Log("Log is written to %s", log_file ? log_file : "stdout");
 }
+
+bool log_enable() {
+  return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst >= CONFIG_TRACE_START) &&
+         (g_nr_guest_inst <= CONFIG_TRACE_END), false);
+}
+#endif

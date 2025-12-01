@@ -13,17 +13,21 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#ifndef __ISA_RISCV_H__
+#define __ISA_RISCV_H__
+
 #include <common.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
+typedef struct {
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
+  vaddr_t pc;
+} MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32e_CPU_state);
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
-}
+// decode
+typedef struct {
+  uint32_t inst;
+} MUXDEF(CONFIG_RV64, riscv64_ISADecodeInfo, riscv32e_ISADecodeInfo);
+
+#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
+
+#endif

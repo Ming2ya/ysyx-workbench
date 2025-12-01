@@ -13,17 +13,32 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <common.h>
+#include <cpu/cpu.h>
+#include <cpu/decode.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
+CPU_state cpu = {};
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
+static void exec_once(Decode *s, vaddr_t pc) {
+    s->pc = pc;
+    s->snpc = pc;
+    isa_exec_once(s);
+    cpu.pc = s->dnpc;
+}
+
+static void execute(uint64_t n){
+    Decode s;
+    for (; n > 0; n --){
+        exec_once(&s, cpu.pc);
+        if (npc_state.state != NPC_RUNNING) break;
+    }
+}
+
+void cpu_exec(uint64_t n){
+    npc_state.state = NPC_RUNNING;
+    execute(n);
+}
+
+void assert_fail_msg() {
+  isa_reg_display();
+  //statistic();
 }

@@ -13,17 +13,12 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <common.h>
+#include <utils.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
+NPCState npc_state = { .state = NPC_STOP };
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
+int is_exit_status_bad() {
+  int good = (npc_state.state == NPC_END && npc_state.halt_ret == 0) ||
+    (npc_state.state == NPC_QUIT);
+  return !good;
 }

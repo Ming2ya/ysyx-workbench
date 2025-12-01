@@ -13,17 +13,36 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __CPU_CPU_H__
-#define __CPU_CPU_H__
+#include <isa.h>
+#include <memory/paddr.h>
 
-#include <common.h>
+// this is not consistent with uint8_t
+// but it is ok since we do not access the array directly
+static const uint32_t img [] = {
+  0x00000297,  // auipc t0,0
+  0x00028823,  // sb  zero,16(t0)
+  0x0102c503,  // lbu a0,16(t0)
+  0x00100073,  // ebreak (used as nemu_trap)
+  0xdeadbeef,  // some data
+};
 
-void cpu_exec(uint64_t n);
+void init_sim();
 
-void set_npc_state(int state, vaddr_t pc, int halt_ret);
-void invalid_inst(vaddr_t thispc);
+static void restart() {
+  /* Set the initial program counter. */
+  cpu.pc = RESET_VECTOR;
 
-#define NPCTRAP(thispc, code) set_npc_state(NPC_END, thispc, code)
-#define INV(thispc) invalid_inst(thispc)
+  /* The zero register is always 0. */
+  cpu.gpr[0] = 0;
 
-#endif
+  /* Reset cpu */
+  init_sim();
+}
+
+void init_isa() {
+  /* Load built-in image. */
+  memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
+
+  /* Initialize this virtual computer system. */
+  restart();
+}

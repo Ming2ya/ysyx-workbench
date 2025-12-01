@@ -13,17 +13,15 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <common.h>
+#include <cpu/cpu.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
+void sdb_mainloop();
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
+void engine_start() {
+#ifdef CONFIG_TARGET_AM
+  cpu_exec(-1);
+#else
+  /* Receive commands from user. */
+//  sdb_mainloop();
+#endif
 }

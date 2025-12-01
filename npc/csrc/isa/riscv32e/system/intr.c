@@ -13,17 +13,16 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <common.h>
+#include <isa.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
+word_t isa_raise_intr(word_t NO, vaddr_t epc) {
+  /* TODO: Trigger an interrupt/exception with ``NO''.
+   * Then return the address of the interrupt/exception vector.
+   */
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
+  return 0;
+}
+
+word_t isa_query_intr() {
+  return INTR_EMPTY;
 }

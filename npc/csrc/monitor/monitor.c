@@ -2,7 +2,6 @@
 
 void init_log(const char *log_file);
 void init_mem();
-void init_sim();
 void init_isa();
 
 static char *log_file = NULL;
@@ -54,7 +53,6 @@ static int parse_args(int argc, char *argv[]) {
 void init_monitor(int argc, char *argv[]){
     parse_args(argc, argv);
     init_log(log_file);
-    init_sim();
     init_mem();
     init_isa();
     long img_size = load_img();

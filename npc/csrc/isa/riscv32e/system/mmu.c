@@ -13,17 +13,10 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <common.h>
+#include <isa.h>
+#include <memory/vaddr.h>
+#include <memory/paddr.h>
 
-void exit_sim();
-void cpu_exec(uint64_t n);
-void init_monitor(int argc, char *argv[]);
-//void engine_start();
-int is_exit_status_bad();
-
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    cpu_exec(-1);
-    exit_sim();
-    return is_exit_status_bad();
+paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
+  return MEM_RET_FAIL;
 }
