@@ -129,6 +129,8 @@ object decode {
   val VALID_Y = 1.U(1.W)
 
   // Ebreak
+  val EBREAK_X = 0.U(1.W)
+  val EBREAK_Y = 1.U(1.W)
 
   class DecodeBundle extends Bundle {
     val ALUCode = UInt(4.W)

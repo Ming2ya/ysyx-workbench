@@ -1,8 +1,8 @@
 package npc.core
 
 import chisel3._
-import npc.defines.decode._
 import chisel3.util._
+import npc.defines.decode._
 
 class IDU extends Module{
     val io = IO(new Bundle {
@@ -22,6 +22,7 @@ class IDU extends Module{
         val jump    = Output(UInt(1.W))
         val branch  = Output(UInt(1.W))
         val jumpAddr= Output(UInt(32.W))
+        val ebreak  = Output(UInt(1.W))
         val valid   = Output(UInt(1.W))
     })
 
@@ -30,26 +31,29 @@ class IDU extends Module{
     io.rdAddr  := io.inst(11, 7)
 
     val ctrl = ListLookup( io.inst,
-        List(ALU_X, OP1_X, OP2_X, MEM_X, REN_X, WB_X, IMM_X, JUMP_X, BRANCH_X, BASE_X, VALID_X),
+        List(ALU_X, OP1_X, OP2_X, MEM_X, REN_X, WB_X, IMM_X, JUMP_X, BRANCH_X, BASE_X, EBREAK_X, VALID_X),
         Array(
-            ADD   -> List(ALU_ADD , OP1_RS1, OP2_RS2 , MEM_X, REN_S, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , VALID_Y),
-            SUB   -> List(ALU_SUB , OP1_RS1, OP2_RS2 , MEM_X, REN_S, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , VALID_Y),
+            ADD   -> List(ALU_ADD , OP1_RS1, OP2_RS2 , MEM_X, REN_S, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            SUB   -> List(ALU_SUB , OP1_RS1, OP2_RS2 , MEM_X, REN_S, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
 
-            ADDI  -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_I, JUMP_X, BRANCH_X, BASE_X  , VALID_Y),
-            JALR  -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X, REN_S, WB_ALU, IMM_I, JUMP_Y, BRANCH_X, BASE_RS1, VALID_Y),
+            ADDI  -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            JALR  -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X, REN_S, WB_ALU, IMM_I, JUMP_Y, BRANCH_X, BASE_RS1, EBREAK_X, VALID_Y),
 
-            LUI   -> List(ALU_LUI , OP1_X   , OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , VALID_Y),
-            AUIPC -> List(ALU_ADD , OP1_PC , OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , VALID_Y),
+            LUI   -> List(ALU_LUI , OP1_X   , OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            AUIPC -> List(ALU_ADD , OP1_PC , OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
 
-            JAL   -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X, REN_S, WB_ALU, IMM_J, JUMP_Y, BRANCH_X, BASE_PC , VALID_Y)
+            JAL   -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X, REN_S, WB_ALU, IMM_J, JUMP_Y, BRANCH_X, BASE_PC , EBREAK_X, VALID_Y),
+
+            EBREAK-> List(ALU_X   , OP1_X  , OP2_X   , MEM_X, REN_X, WB_X  , IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_Y, VALID_Y)
         )
     )
-    val alu_code::op1_sel::op2_sel::mem_wen::rf_wen::wb_sel::imm_sel::jump::branch::base_sel::valid::Nil = ctrl
+    val alu_code::op1_sel::op2_sel::mem_wen::rf_wen::wb_sel::imm_sel::jump::branch::base_sel::ebreak::valid::Nil = ctrl
     io.aluCode := alu_code
     io.regWrite:= rf_wen
     io.MemtoReg:= (wb_sel === WB_MEM).asUInt
     io.jump    := jump
     io.branch  := branch    // 分支测试未完成
+    io.ebreak  := ebreak
     io.valid   := valid
 
     io.aluSrcA := MuxLookup(

@@ -2,13 +2,15 @@ package npc
 
 import chisel3._
 import npc.core._
+import npc.dpic.UpdateReg
 
-class TOP extends Module{
+class Top extends Module{
     val io = IO(new Bundle {
         val inst    = Input(UInt(32.W))
         val memDout = Input(UInt(32.W))
         val pc      = Output(UInt(32.W))
-        val valid   = Output(UInt(32.W))
+        val ebreak  = Output(UInt(1.W))
+        val valid   = Output(UInt(1.W))
     })
 
     val ifu = Module(new IFU)
@@ -41,10 +43,11 @@ class TOP extends Module{
     rf.io.rdData := Mux(idu.io.MemtoReg === 1.U, io.memDout, exu.io.aluResult)
     
     // Output valid signal
+    io.ebreak := idu.io.ebreak
     io.valid := idu.io.valid
 }
 
-class  RegisterFile extends Module {
+class RegisterFile extends Module {
     val io = IO(new Bundle {
         val rs1Addr = Input(UInt(5.W))
         val rs2Addr = Input(UInt(5.W))
@@ -63,4 +66,11 @@ class  RegisterFile extends Module {
 
     io.rs1Data := Mux(io.rs1Addr === 0.U, 0.U, regFile(io.rs1Addr))
     io.rs2Data := Mux(io.rs2Addr === 0.U, 0.U, regFile(io.rs2Addr))
+
+    val dpic = Module(new UpdateReg)
+    dpic.io.clk := clock
+    dpic.io.reset := reset
+    dpic.io.rdAddr := io.rdAddr
+    dpic.io.rdData := io.rdData
+    dpic.io.regWrite := io.regWrite
 }
