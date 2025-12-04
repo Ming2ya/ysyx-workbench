@@ -38,15 +38,19 @@ TOPNAME = Top
 OBJ_DIR = $(BUILD_DIR)/obj-$(NAME)
 BINARY = $(BUILD_DIR)/$(NAME)
 
-CSRCS := $(shell find $(abspath ./csrc) -name '*.c' -or -name '*.cc')
+CSRCS := $(shell find csrc -name '*.c')
+CXXSRCS := $(shell find $(abspath csrc) -name '*.cc')
 VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPIC.sv
-INC_PATH := $(NPC_HOME)/include $(VERILATOR_ROOT)/include $(OBJ_DIR) $(INC_PATH)
-INC_PATH += $(NPC_HOME)/csrc/isa/riscv32e/include
+LIBS += -lreadline
+INC_PATH += $(VERILATOR_ROOT)/include $(VERILATOR_ROOT)/include/vltstd $(OBJ_DIR)
+INC_PATH += $(NPC_HOME)/include $(NPC_HOME)/csrc/isa/riscv32e/include
 
 CFLAGS += -Og -ggdb3
 CFLAGS += $(addprefix -I, $(INC_PATH))
 CFLAGS += -D__GUEST_ISA__=$(GUEST_ISA)
-VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME) -sv --LDFLAGS -Wl,--no-relax
+LDFLAGS += -Wl,--no-relax
+LDFLAGS += $(LIBS)
+VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME) -sv
 	
 include $(NPC_HOME)/scripts/sim.mk
 
