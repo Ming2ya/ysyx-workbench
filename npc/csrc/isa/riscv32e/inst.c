@@ -13,15 +13,14 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "local-include/reg.h"
 #include <cpu/cpu.h>
+#include <cpu/ifetch.h>
+#include <cpu/decode.h>
 
-void sdb_mainloop();
+int decode_exec(Decode *s);
 
-void engine_start() {
-#ifdef CONFIG_TARGET_AM
-  cpu_exec(-1);
-#else
-  /* Receive commands from user. */
-//  sdb_mainloop();
-#endif
+int isa_exec_once(Decode *s) {
+  s->isa.inst = inst_fetch(&s->snpc, 4);
+  return decode_exec(s);
 }

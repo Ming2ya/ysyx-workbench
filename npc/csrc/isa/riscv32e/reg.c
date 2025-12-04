@@ -23,21 +23,6 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
-#include "svdpi.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void update_reg(int addr, const svLogicVecVal* data){
-    uint32_t data_val = data[0].aval;
-    gpr(addr) = data_val;
-}
-
-#ifdef __cplusplus
-}
-#endif
-
 void isa_reg_display() {
     printf("pc = 0x%08x\n", cpu.pc);
     for (int i = 0; i < 4; i ++){

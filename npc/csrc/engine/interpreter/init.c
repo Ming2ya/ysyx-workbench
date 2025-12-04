@@ -13,25 +13,15 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __CPU_CPU_H__
-#define __CPU_CPU_H__
+#include <cpu/cpu.h>
 
-#include <common.h>
+void sdb_mainloop();
 
-#ifdef __cplusplus
-extern "C" {
+void engine_start() {
+#ifdef CONFIG_TARGET_AM
+  cpu_exec(-1);
+#else
+  /* Receive commands from user. */
+  sdb_mainloop();
 #endif
-
-void cpu_exec(uint64_t n);
-
-void set_npc_state(int state, vaddr_t pc, int halt_ret);
-void invalid_inst(vaddr_t thispc);
-
-#define NPCTRAP(thispc, code) set_npc_state(NPC_END, thispc, code)
-#define INV(thispc) invalid_inst(thispc)
-
-#ifdef __cplusplus
 }
-#endif
-
-#endif
