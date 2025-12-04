@@ -3,6 +3,7 @@
 void init_log(const char *log_file);
 void init_mem();
 void init_isa();
+void init_sdb();
 
 static char *log_file = NULL;
 static char *img_file = NULL;
@@ -56,4 +57,5 @@ void init_monitor(int argc, char *argv[]){
     init_mem();
     init_isa();
     long img_size = load_img();
+    init_sdb();
 }

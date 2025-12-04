@@ -13,16 +13,17 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#ifndef __SDB_H__
+#define __SDB_H__
+
 #include <common.h>
 
-void exit_sim();
-void init_monitor(int argc, char *argv[]);
-void engine_start();
-int is_exit_status_bad();
+typedef struct watchpoint WP;
 
-int main(int argc, char *argv[]) {
-    init_monitor(argc, argv);
-    engine_start();
-    exit_sim();
-    return is_exit_status_bad();
-}
+word_t expr(char *e, bool *success);
+WP* new_wp(char* str);
+WP* new_bp(char* str);
+void info_wp();
+void del_wp(int num);
+
+#endif
