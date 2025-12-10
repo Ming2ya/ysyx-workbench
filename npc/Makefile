@@ -38,6 +38,10 @@ TOPNAME = Top
 OBJ_DIR = $(BUILD_DIR)/obj-$(NAME)
 BINARY = $(BUILD_DIR)/$(NAME)
 
+# Include all filelist.mk to merge file lists
+FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
+include $(FILELIST_MK)
+
 CSRCS := $(shell find csrc -name '*.c')
 CXXSRCS := $(shell find $(abspath csrc) -name '*.cc')
 VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPIC.sv
@@ -45,12 +49,21 @@ LIBS += -lreadline
 INC_PATH += $(VERILATOR_ROOT)/include $(VERILATOR_ROOT)/include/vltstd $(OBJ_DIR)
 INC_PATH += $(NPC_HOME)/include $(NPC_HOME)/csrc/isa/riscv32e/include
 
-CFLAGS += -Og -ggdb3
+CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
+CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-Og -ggdb3,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
+CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
+CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)
+CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
 CFLAGS += $(addprefix -I, $(INC_PATH))
-CFLAGS += -D__GUEST_ISA__=$(GUEST_ISA)
+CFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 LDFLAGS += -Wl,--no-relax
 LDFLAGS += $(LIBS)
 VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME) -sv
+
+# Include rules for menuconfig
+include $(NPC_HOME)/scripts/config.mk
 	
 include $(NPC_HOME)/scripts/sim.mk
 
