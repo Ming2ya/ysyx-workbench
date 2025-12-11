@@ -3,6 +3,7 @@ package npc.core
 import chisel3._
 import chisel3.util._
 import npc.defines.decode._
+import npc.dpi.DecResult
 
 class IDU extends Module{
     val io = IO(new Bundle {
@@ -14,7 +15,8 @@ class IDU extends Module{
         val rs2Addr = Output(UInt(5.W))
         val rdAddr  = Output(UInt(5.W))
         val regWrite= Output(UInt(1.W))
-        val MemtoReg= Output(UInt(1.W))
+        val memToReg= Output(UInt(1.W))
+        val writeMem= Output(UInt(3.W))
         val aluSrcA = Output(UInt(32.W))
         val aluSrcB = Output(UInt(32.W))
         val aluCode = Output(UInt(4.W))
@@ -22,8 +24,6 @@ class IDU extends Module{
         val jump    = Output(UInt(1.W))
         val branch  = Output(UInt(1.W))
         val jumpAddr= Output(UInt(32.W))
-        val ebreak  = Output(UInt(1.W))
-        val valid   = Output(UInt(1.W))
     })
 
     io.rs1Addr := io.inst(19, 15)
@@ -39,6 +39,10 @@ class IDU extends Module{
             ADDI  -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
             JALR  -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X, REN_S, WB_ALU, IMM_I, JUMP_Y, BRANCH_X, BASE_RS1, EBREAK_X, VALID_Y),
 
+            SB    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_B, REN_X, WB_ALU, IMM_S, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            SH    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_H, REN_X, WB_ALU, IMM_S, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            SW    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_W, REN_X, WB_ALU, IMM_S, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+
             LUI   -> List(ALU_LUI , OP1_X   , OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
             AUIPC -> List(ALU_ADD , OP1_PC , OP2_IMM , MEM_X, REN_S, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
 
@@ -50,11 +54,15 @@ class IDU extends Module{
     val alu_code::op1_sel::op2_sel::mem_wen::rf_wen::wb_sel::imm_sel::jump::branch::base_sel::ebreak::valid::Nil = ctrl
     io.aluCode := alu_code
     io.regWrite:= rf_wen
-    io.MemtoReg:= (wb_sel === WB_MEM).asUInt
+    io.memToReg:= (wb_sel === WB_MEM).asUInt
+    io.writeMem := mem_wen
     io.jump    := jump
     io.branch  := branch    // 分支测试未完成
-    io.ebreak  := ebreak
-    io.valid   := valid
+
+    val decResult = Module(new DecResult)
+    decResult.io.ebreak  := ebreak
+    decResult.io.valid   := valid
+    decResult.io.pc      := io.pc
 
     io.aluSrcA := MuxLookup(
         op1_sel,

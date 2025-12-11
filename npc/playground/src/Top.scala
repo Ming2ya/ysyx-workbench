@@ -2,15 +2,15 @@ package npc
 
 import chisel3._
 import npc.core._
-import npc.dpic.UpdateReg
+import npc.dpi._
 
 class Top extends Module{
     val io = IO(new Bundle {
-        val inst    = Input(UInt(32.W))
         val memDout = Input(UInt(32.W))
+        val memWrite= Output(UInt(3.W))
+        val memAddr = Output(UInt(32.W))
+        val memData = Output(UInt(32.W))
         val pc      = Output(UInt(32.W))
-        val ebreak  = Output(UInt(1.W))
-        val valid   = Output(UInt(1.W))
     })
 
     val ifu = Module(new IFU)
@@ -25,7 +25,7 @@ class Top extends Module{
     ifu.io.jumpAddr := idu.io.jumpAddr
     
     // IDU connections
-    idu.io.inst    := io.inst
+    idu.io.inst    := ifu.io.inst
     idu.io.pc      := ifu.io.pc
     idu.io.rs1Data := rf.io.rs1Data
     idu.io.rs2Data := rf.io.rs2Data
@@ -40,11 +40,12 @@ class Top extends Module{
     // Write back connections
     rf.io.rdAddr := idu.io.rdAddr
     rf.io.regWrite := idu.io.regWrite
-    rf.io.rdData := Mux(idu.io.MemtoReg === 1.U, io.memDout, exu.io.aluResult)
+    rf.io.rdData := Mux(idu.io.memToReg === 1.U, io.memDout, exu.io.aluResult)
     
-    // Output valid signal
-    io.ebreak := idu.io.ebreak
-    io.valid := idu.io.valid
+    // Output signal
+    io.memWrite := idu.io.writeMem
+    io.memAddr := exu.io.aluResult
+    io.memData := rf.io.rs2Data
 }
 
 class RegisterFile extends Module {
@@ -67,10 +68,9 @@ class RegisterFile extends Module {
     io.rs1Data := Mux(io.rs1Addr === 0.U, 0.U, regFile(io.rs1Addr))
     io.rs2Data := Mux(io.rs2Addr === 0.U, 0.U, regFile(io.rs2Addr))
 
-    val dpic = Module(new UpdateReg)
-    dpic.io.clk := clock
-    dpic.io.reset := reset
-    dpic.io.rdAddr := io.rdAddr
-    dpic.io.rdData := io.rdData
-    dpic.io.regWrite := io.regWrite
+    val updataReg = Module(new UpdateReg)
+    updataReg.io.clk := clock
+    updataReg.io.rdAddr := io.rdAddr
+    updataReg.io.rdData := io.rdData
+    updataReg.io.regWrite := io.regWrite
 }
