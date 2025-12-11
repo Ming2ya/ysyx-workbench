@@ -13,5 +13,7 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
-INC_PATH += $(NPC_HOME)/src/engine/$(ENGINE)
-DIRS-y += src/engine/$(ENGINE)
+NAME = gen-expr
+SRCS = gen-expr.c
+CFLAGS += -g
+include $(NEMU_HOME)/scripts/build.mk

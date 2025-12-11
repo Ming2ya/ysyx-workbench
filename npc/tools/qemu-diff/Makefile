@@ -13,5 +13,11 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
-INC_PATH += $(NPC_HOME)/src/engine/$(ENGINE)
-DIRS-y += src/engine/$(ENGINE)
+NAME  = $(GUEST_ISA)-qemu
+SRCS  = $(shell find src/ -name "*.c")
+
+SHARE = 1
+CFLAGS += -DNEMU_HOME=\"$(NEMU_HOME)\" -DCONFIG_ISA_$(GUEST_ISA)
+INC_PATH += $(NEMU_HOME)/include
+
+include $(NEMU_HOME)/scripts/build.mk

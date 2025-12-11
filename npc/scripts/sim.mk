@@ -1,5 +1,6 @@
 IMG ?=
-NPC_EXEC = $(BINARY) $(IMG)
+ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
+NPC_EXEC = $(BINARY) $(ARGS) $(IMG)
 
 INCLUDES = $(addprefix -I, $(INC_PATH))
 CFLAGS  := -O2 -MMD  $(INCLUDES) $(CFLAGS) #-Wall -Werror
