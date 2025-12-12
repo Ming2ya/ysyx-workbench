@@ -15,7 +15,10 @@ $(OBJ_DIR)/%.o: %.c
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
-$(VSRCS): verilog
+$(BUILD_DIR)/$(TOPNAME).sv: $(SCALASRCS)
+	$(call git_commit, "generate verilog")
+	mkdir -p $(BUILD_DIR)
+	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 
 $(BINARY): $(VSRCS) $(CXXSRCS) $(OBJS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!

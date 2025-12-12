@@ -34,6 +34,8 @@ clean:
 -include $(NPC_HOME)/include/config/auto.conf
 -include $(NPC_HOME)/include/config/auto.conf.cmd
 
+remove_quote = $(patsubst "%",%,$(1))
+
 ISA ?= riscv32e
 GUEST_ISA = $(ISA)
 NAME = $(GUEST_ISA)-npc
@@ -48,10 +50,11 @@ include $(FILELIST_MK)
 
 CSRCS := $(shell find csrc -name '*.c')
 CXXSRCS := $(shell find $(abspath csrc) -name '*.cc')
-# DIRS-BLACKLIST-y += $(DIRS-BLACKLIST)
-# SRCS-BLACKLIST-y += $(SRCS-BLACKLIST) $(shell find -L $(DIRS-BLACKLIST-y) -name "*.c")
-# CSRCS := $(filter-out $(SRCS-BLACKLIST-y),$(CSRCS))
-VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPIC.sv
+DIRS-BLACKLIST-y += $(DIRS-BLACKLIST)
+SRCS-BLACKLIST-y += $(SRCS-BLACKLIST) $(shell find -L $(DIRS-BLACKLIST-y) -name "*.c")
+CSRCS := $(filter-out $(SRCS-BLACKLIST-y),$(CSRCS))
+VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPI.sv
+SCALASRCS := $(shell find $(abspath playground) -name '*.scala')
 LIBS += -lreadline
 INC_PATH += $(VERILATOR_ROOT)/include $(VERILATOR_ROOT)/include/vltstd $(OBJ_DIR)
 INC_PATH += $(NPC_HOME)/include $(NPC_HOME)/csrc/isa/riscv32e/include
@@ -65,7 +68,7 @@ CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(C
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
 CFLAGS += $(addprefix -I, $(INC_PATH))
 CFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
-LDFLAGS += $(CFLAGS_BUILD) -Wl,--no-relax
+LDFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -Wl,--no-relax
 LDFLAGS += $(LIBS)
 VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME) -sv
 
