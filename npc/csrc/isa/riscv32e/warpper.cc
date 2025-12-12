@@ -1,10 +1,6 @@
 #include <verilated_vcd_c.h>
 #include "VTop.h"
 
-#include "local-include/reg.h"
-#include <cpu/decode.h>
-#include <cpu/cpu.h>
-
 static int sim_time;
 static VTop *dut = NULL;
 static VerilatedVcdC *vcd = NULL;
@@ -12,10 +8,6 @@ static VerilatedVcdC *vcd = NULL;
 static void update_time(){
     sim_time += 5;
 }
-
-extern "C" {
-
-void vaddr_write(vaddr_t addr, int len, word_t data);
 
 void single_cyc() {
     dut->clock = 1; dut->eval(); vcd->dump(sim_time); update_time();
@@ -29,13 +21,15 @@ static void reset(int n){
     dut->eval();
 }
 
+extern "C" {
+
 void init_sim(){
     dut = new VTop;
     vcd = new VerilatedVcdC;
     Verilated::traceEverOn(true);
     dut->trace(vcd, 5);
     vcd->open("build/wave.vcd");
-    reset(10);
+    reset(5);
 }
 
 void exit_sim(){
@@ -44,14 +38,20 @@ void exit_sim(){
     vcd->close();
 }
 
-int decode_exec(Decode *s) {
-    dut->io_inst = s->isa.inst;
+int npc_exec_once() {
     single_cyc();
-    s->dnpc = dut->io_pc;
-    // reg 通过DPI-C更新过
-    if (dut->io_valid == 0) INV(s->pc);
-    if (dut->io_ebreak) NPCTRAP(s->pc, gpr(10));
     return 0;
 }
 
+uint32_t npc_get_pc() {
+    return dut->io_pc;
+}
+
+uint32_t npc_get_ebreak() {
+    return dut->io_ebreak;
+}
+
+uint32_t npc_get_inv() {
+    return !dut->io_valid;
+}
 }

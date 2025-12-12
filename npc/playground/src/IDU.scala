@@ -24,6 +24,8 @@ class IDU extends Module{
         val jump    = Output(UInt(1.W))
         val branch  = Output(UInt(1.W))
         val jumpAddr= Output(UInt(32.W))
+        val ebreak  = Output(UInt(1.W))
+        val valid   = Output(UInt(1.W))
     })
 
     io.rs1Addr := io.inst(19, 15)
@@ -58,11 +60,13 @@ class IDU extends Module{
     io.writeMem := mem_wen
     io.jump    := jump
     io.branch  := branch    // 分支测试未完成
+    io.ebreak  := ebreak
+    io.valid   := valid
 
-    val decResult = Module(new DecResult)
-    decResult.io.ebreak  := ebreak
-    decResult.io.valid   := valid
-    decResult.io.pc      := io.pc
+    // val decResult = Module(new DecResult)
+    // decResult.io.ebreak  := ebreak
+    // decResult.io.valid   := valid
+    // decResult.io.pc      := io.pc
 
     io.aluSrcA := MuxLookup(
         op1_sel,

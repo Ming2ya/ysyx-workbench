@@ -14,6 +14,7 @@ class UpdateReg extends BlackBox {
 class InstFetch extends BlackBox {
     val io = IO(new Bundle {
         val clk = Input(Clock())
+        val reset = Input(Bool())
         val pc = Input(UInt(32.W))
         val inst = Output(UInt(32.W))
     })

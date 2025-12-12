@@ -6,7 +6,7 @@ module UpdateReg(
 );
     import "DPI-C" context function void npc_update_reg(input int unsigned addr, input int unsigned data);
     always @(posedge clk) begin
-        if (regWrite) begin
+        if (regWrite && ~|rdAddr) begin
             npc_update_reg({27'b0, rdAddr}, rdData);
         end
     end
@@ -15,12 +15,18 @@ endmodule
 
 module InstFetch(
     input clk,
+    input reset,
     input logic [31:0] pc,
     output logic [31:0] inst
 );
     import "DPI-C" context function int unsigned npc_inst_fetch(input int unsigned addr);
     always @(posedge clk) begin
-        inst <= npc_inst_fetch(pc);
+        if (reset) begin
+            inst <= 32'd0;
+        end
+        else begin
+            inst <= npc_inst_fetch(pc);
+        end
     end
 
 endmodule

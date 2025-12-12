@@ -11,6 +11,8 @@ class Top extends Module{
         val memAddr = Output(UInt(32.W))
         val memData = Output(UInt(32.W))
         val pc      = Output(UInt(32.W))
+        val ebreak  = Output(UInt(1.W))
+        val valid   = Output(UInt(1.W))
     })
 
     val ifu = Module(new IFU)
@@ -19,7 +21,6 @@ class Top extends Module{
     val rf  = Module(new RegisterFile)
 
     // IFU connections
-    io.pc := ifu.io.pc
     ifu.io.jump := idu.io.jump
     ifu.io.branch := idu.io.branch
     ifu.io.jumpAddr := idu.io.jumpAddr
@@ -43,6 +44,9 @@ class Top extends Module{
     rf.io.rdData := Mux(idu.io.memToReg === 1.U, io.memDout, exu.io.aluResult)
     
     // Output signal
+    io.pc := ifu.io.pc
+    io.ebreak := idu.io.ebreak
+    io.valid := idu.io.valid
     io.memWrite := idu.io.writeMem
     io.memAddr := exu.io.aluResult
     io.memData := rf.io.rs2Data
