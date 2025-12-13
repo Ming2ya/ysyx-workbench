@@ -18,9 +18,19 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
-int decode_exec(Decode *s);
+int npc_exec_once();
+uint32_t npc_get_inv();
+uint32_t npc_get_ebreak();
+uint32_t npc_get_pc();
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
-  return decode_exec(s);
+  // inst 通过dpi读取
+  npc_exec_once();
+  // gpr 通过dpi更新
+  s->dnpc = npc_get_pc();
+  if (npc_get_ebreak()) NPCTRAP(s->pc, gpr(10));
+  if (npc_get_inv()) INV(s->pc);
+  return 0;
+  
 }

@@ -1,7 +1,7 @@
 /***************************************************************************************
 * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 *
-* NEMU is licensed under Mulan PSL v2.
+* NPC is licensed under Mulan PSL v2.
 * You can use this software according to the terms and conditions of the Mulan PSL v2.
 * You may obtain a copy of Mulan PSL v2 at:
 *          http://license.coscl.org.cn/MulanPSL2
@@ -15,6 +15,7 @@
 
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
+#include <locale.h>
 
 #define MAX_INST_TO_PRINT 10
 
@@ -27,13 +28,14 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
+  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
-    s->pc = pc;
-    s->snpc = cpu.pc;
-    isa_exec_once(s);
-    cpu.pc = s->dnpc;
+  s->pc = pc;
+  s->snpc = pc;
+  isa_exec_once(s);
+  cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -60,23 +62,62 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #endif
 }
 
-static void execute(uint64_t n){
-    Decode s;
-    for (; n > 0; n --){
-        exec_once(&s, cpu.pc);
-        g_nr_guest_inst ++;
-        trace_and_difftest(&s, cpu.pc);
-        if (npc_state.state != NPC_RUNNING) break;
-        IFDEF(CONFIG_DEVICE, device_update());
-    }
+static void execute(uint64_t n) {
+  Decode s;
+  for (;n > 0; n --) {
+    exec_once(&s, cpu.pc);
+    g_nr_guest_inst ++;
+    trace_and_difftest(&s, cpu.pc);
+    if (npc_state.state != NPC_RUNNING) break;
+    IFDEF(CONFIG_DEVICE, device_update());
+  }
 }
 
-void cpu_exec(uint64_t n){
-    npc_state.state = NPC_RUNNING;
-    execute(n);
+static void statistic() {
+  IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
+#define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
+  Log("host time spent = " NUMBERIC_FMT " us", g_timer);
+  Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+  if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
+  else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
 void assert_fail_msg() {
   isa_reg_display();
-  //statistic();
+  statistic();
+  void exit_sim();
+  exit_sim();
+}
+
+/* Simulate how the CPU works. */
+void cpu_exec(uint64_t n) {
+  g_print_step = (n < MAX_INST_TO_PRINT);
+  switch (npc_state.state) {
+    case NPC_END: case NPC_ABORT: case NPC_QUIT:
+      printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
+      return;
+    default: npc_state.state = NPC_RUNNING;
+  }
+
+  uint64_t timer_start = get_time();
+
+  execute(n);
+
+  uint64_t timer_end = get_time();
+  g_timer += timer_end - timer_start;
+
+  switch (npc_state.state) {
+    case NPC_RUNNING: npc_state.state = NPC_STOP; break;
+
+    case NPC_ABORT:
+      Log("nemu: %s at pc = " FMT_WORD, ANSI_FMT("ABORT", ANSI_FG_RED), npc_state.halt_pc);
+      IFDEF(CONFIG_RINGTRACE, ringtrace_print()); statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); break;
+    case NPC_END:
+      Log("nemu: %s at pc = " FMT_WORD,
+           (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
+            ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED)),
+          npc_state.halt_pc);
+      // fall through
+    case NPC_QUIT: statistic(); IFDEF(CONFIG_FTRACE, ftrace_print());
+  }
 }

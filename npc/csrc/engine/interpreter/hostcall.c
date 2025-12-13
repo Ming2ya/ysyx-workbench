@@ -47,5 +47,8 @@ void invalid_inst(vaddr_t thispc) {
         "* The machine is always right!\n"
         "* Every line of untested code is always wrong!\n\n", ANSI_FG_RED), isa_logo);
 
+  void exit_sim();
+  exit_sim();
+
   set_npc_state(NPC_ABORT, thispc, -1);
 }
