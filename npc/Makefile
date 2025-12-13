@@ -10,8 +10,8 @@ verilog:
 	mkdir -p $(BUILD_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 
-help:
-	mill -i $(PRJ).runMain Elaborate --help
+# help:
+# 	mill -i $(PRJ).runMain Elaborate --help
 
 reformat:
 	mill -i __.reformat
@@ -48,17 +48,23 @@ BINARY = $(BUILD_DIR)/$(NAME)
 FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
 include $(FILELIST_MK)
 
-CSRCS := $(shell find csrc -name '*.c')
-CXXSRCS := $(shell find $(abspath csrc) -name '*.cc')
+# Filter out directories and files in blacklist to obtain the final set of source files
 DIRS-BLACKLIST-y += $(DIRS-BLACKLIST)
 SRCS-BLACKLIST-y += $(SRCS-BLACKLIST) $(shell find -L $(DIRS-BLACKLIST-y) -name "*.c")
-CSRCS := $(filter-out $(SRCS-BLACKLIST-y),$(CSRCS))
+SRCS-y += $(shell find -L $(DIRS-y) -name "*.c")
+CSRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SRCS-y))
+CXXSRCS := $(shell find $(abspath csrc) -name '*.cc')
+
 VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPI.sv
 SCALASRCS := $(shell find $(abspath playground) -name '*.scala')
-LIBS += -lreadline
-INC_PATH += $(VERILATOR_ROOT)/include $(VERILATOR_ROOT)/include/vltstd $(OBJ_DIR)
-INC_PATH += $(NPC_HOME)/include $(NPC_HOME)/csrc/isa/riscv32e/include
 
+INC_PATH += $(VERILATOR_ROOT)/include $(VERILATOR_ROOT)/include/vltstd $(OBJ_DIR)
+INC_PATH += $(NPC_HOME)/include
+
+# Extract compiler and options from menuconfig
+ifneq ($(CONFIG_CC),)
+CC = $(call remove_quote,$(CONFIG_CC))
+endif
 CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-Og -ggdb3,)
@@ -66,9 +72,8 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
-CFLAGS += $(addprefix -I, $(INC_PATH))
 CFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
-LDFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -Wl,--no-relax
+LDFLAGS += $(CFLAGS_BUILD) #-Wl,--no-relax
 LDFLAGS += $(LIBS)
 VFLAGS += --cc --MMD --build --exe --trace --top-module $(TOPNAME) -sv
 
