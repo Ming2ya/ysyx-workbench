@@ -24,11 +24,16 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+void ftrace_main(Decode *s, vaddr_t npc);
+void ftrace_print();
+
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+
+  IFDEF(CONFIG_FTRACE, ftrace_main(_this, dnpc));
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
