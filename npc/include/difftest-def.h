@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include <macro.h>
-//#include <generated/autoconf.h>
+#include <generated/autoconf.h>
 
 #define __EXPORT __attribute__((visibility("default")))
 enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };

@@ -1,5 +1,9 @@
+include $(NPC_HOME)/tools/difftest.mk
+
+override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
+override ARGS += $(ARGS_DIFF)
+
 IMG ?=
-ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
 NPC_EXEC = $(BINARY) $(ARGS) $(IMG)
 
 INCLUDES = $(addprefix -I, $(INC_PATH))

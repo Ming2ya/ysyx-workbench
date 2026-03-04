@@ -15,6 +15,7 @@
 
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
+#include <cpu/difftest.h>
 #include <locale.h>
 
 #define MAX_INST_TO_PRINT 10
@@ -32,7 +33,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
-
+  IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   IFDEF(CONFIG_FTRACE, ftrace_main(_this, dnpc));
 }
 
