@@ -29,7 +29,7 @@ void init_sim(){
     Verilated::traceEverOn(true);
     dut->trace(vcd, 5);
     vcd->open("build/wave.vcd");
-    reset(5);
+    reset(3);
 }
 
 void exit_sim(){
@@ -45,6 +45,10 @@ int npc_exec_once() {
 
 uint32_t npc_get_pc() {
     return dut->io_pc;
+}
+
+uint32_t npc_get_inst() {
+    return dut->io_inst;
 }
 
 uint32_t npc_get_ebreak() {

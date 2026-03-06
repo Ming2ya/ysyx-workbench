@@ -12,7 +12,7 @@ class IFU extends Module{
         val inst = Output(UInt(32.W))
     })
 
-    val pcReg = RegInit(0x7ffffffcL.U(32.W))
+    val pcReg = RegInit(0x80000000L.U(32.W))
     val jump = io.branch | io.jump
     val snpc = pcReg + 4.U
     val dnpc = Mux(jump === 1.U, io.jumpAddr, snpc)
@@ -21,9 +21,8 @@ class IFU extends Module{
     io.pc := pcReg
 
     val instFetch = Module(new InstFetch)
-    instFetch.io.clk := clock
     instFetch.io.reset := reset
-    instFetch.io.pc := dnpc
+    instFetch.io.pc := pcReg
     io.inst := instFetch.io.inst
 
 }

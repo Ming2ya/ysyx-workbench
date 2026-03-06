@@ -11,6 +11,7 @@ class Top extends Module{
         val memAddr = Output(UInt(32.W))
         val memData = Output(UInt(32.W))
         val pc      = Output(UInt(32.W))
+        val inst    = Output(UInt(32.W))
         val ebreak  = Output(UInt(1.W))
         val valid   = Output(UInt(1.W))
     })
@@ -45,6 +46,7 @@ class Top extends Module{
     
     // Output signal
     io.pc := ifu.io.pc
+    io.inst := ifu.io.inst
     io.ebreak := idu.io.ebreak
     io.valid := idu.io.valid
     io.memWrite := idu.io.writeMem
@@ -63,7 +65,7 @@ class RegisterFile extends Module {
         val rs2Data = Output(UInt(32.W))
     })
 
-    val regFile = Reg(Vec(32, UInt(32.W)))
+    val regFile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
 
     when(io.regWrite===1.U && io.rdAddr =/= 0.U) {
         regFile(io.rdAddr) := io.rdData
@@ -74,6 +76,7 @@ class RegisterFile extends Module {
 
     val updataReg = Module(new UpdateReg)
     updataReg.io.clk := clock
+    updataReg.io.reset := reset
     updataReg.io.rdAddr := io.rdAddr
     updataReg.io.rdData := io.rdData
     updataReg.io.regWrite := io.regWrite

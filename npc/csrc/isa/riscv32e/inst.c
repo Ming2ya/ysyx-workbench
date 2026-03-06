@@ -22,9 +22,11 @@ int npc_exec_once();
 uint32_t npc_get_inv();
 uint32_t npc_get_ebreak();
 uint32_t npc_get_pc();
+uint32_t npc_get_inst();
 
 int isa_exec_once(Decode *s) {
-  s->isa.inst = inst_fetch(&s->snpc, 4);
+  s->isa.inst = npc_get_inst();
+  s->snpc = s->snpc + 4;
   // inst 通过dpi读取
   npc_exec_once();
   // gpr 通过dpi更新

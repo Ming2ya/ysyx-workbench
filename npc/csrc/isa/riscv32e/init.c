@@ -26,17 +26,12 @@ static const uint32_t img [] = {
   0xdeadbeef,  // some data
 };
 
-void init_sim();
-
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;
 
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
-
-  /* Reset cpu */
-  init_sim();
 }
 
 void init_isa() {

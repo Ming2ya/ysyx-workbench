@@ -4,6 +4,7 @@
 
 extern "C"{
 void npc_update_reg(uint32_t addr, uint32_t data){
+    Log("Write gpr%d: 0x%08x", addr, data);
     gpr(addr) = data;
 }
 
