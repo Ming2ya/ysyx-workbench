@@ -27,12 +27,11 @@ uint32_t npc_get_inst();
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_get_inst();
   s->snpc = s->snpc + 4;
+  if (npc_get_ebreak()) NPCTRAP(s->pc, gpr(10));
+  if (npc_get_inv()) INV(s->pc);
   // inst 通过dpi读取
   npc_exec_once();
   // gpr 通过dpi更新
   s->dnpc = npc_get_pc();
-  if (npc_get_ebreak()) NPCTRAP(s->pc, gpr(10));
-  if (npc_get_inv()) INV(s->pc);
   return 0;
-  
 }
