@@ -19,6 +19,10 @@ $(OBJ_DIR)/%.o: %.c
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
+# Depencies
+-include $(OBJS:.o=.d)
+-include $(OBJ_DIR)/*.d
+
 $(BUILD_DIR)/$(TOPNAME).sv: $(SCALASRCS)
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
@@ -26,6 +30,7 @@ $(BUILD_DIR)/$(TOPNAME).sv: $(SCALASRCS)
 
 $(BINARY): $(VSRCS) $(CXXSRCS) $(OBJS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@rm -f $@
 	verilator --Mdir $(OBJ_DIR) -o $@ $^ $(VFLAGS) \
 			$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS))
 
