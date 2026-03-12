@@ -6,10 +6,6 @@ import npc.dpi._
 
 class Top extends Module{
     val io = IO(new Bundle {
-        val memDout = Input(UInt(32.W))
-        val memWrite= Output(UInt(3.W))
-        val memAddr = Output(UInt(32.W))
-        val memData = Output(UInt(32.W))
         val pc      = Output(UInt(32.W))
         val inst    = Output(UInt(32.W))
         val ebreak  = Output(UInt(1.W))
@@ -20,6 +16,7 @@ class Top extends Module{
     val idu = Module(new IDU)
     val exu = Module(new EXU)
     val rf  = Module(new RegisterFile)
+    val mem = Module(new MEM)
 
     // IFU connections
     ifu.io.jump := idu.io.jump
@@ -31,27 +28,34 @@ class Top extends Module{
     idu.io.pc      := ifu.io.pc
     idu.io.rs1Data := rf.io.rs1Data
     idu.io.rs2Data := rf.io.rs2Data
-    rf.io.rs1Addr := idu.io.rs1Addr
-    rf.io.rs2Addr := idu.io.rs2Addr
+
+    // EXU connections
     exu.io.imm := idu.io.imm
     exu.io.pc := ifu.io.pc
     exu.io.aluSrcA := idu.io.aluSrcA
     exu.io.aluSrcB := idu.io.aluSrcB
     exu.io.aluCode := idu.io.aluCode
-    
-    // Write back connections
+
+    // MEM connections
+    mem.io.valid := idu.io.memToReg
+    mem.io.raddr := exu.io.aluResult
+    mem.io.wen   := idu.io.writeMem
+    mem.io.waddr := exu.io.aluResult
+    mem.io.wdata := rf.io.rs2Data
+    mem.io.wmask := idu.io.memMask
+
+    // RF  connections
+    rf.io.rs1Addr := idu.io.rs1Addr
+    rf.io.rs2Addr := idu.io.rs2Addr
     rf.io.rdAddr := idu.io.rdAddr
     rf.io.regWrite := idu.io.regWrite
-    rf.io.rdData := Mux(idu.io.memToReg === 1.U, io.memDout, exu.io.aluResult)
+    rf.io.rdData := Mux(idu.io.memToReg === 1.U, mem.io.rdata, exu.io.aluResult)
     
     // Output signal
     io.pc := ifu.io.pc
     io.inst := ifu.io.inst
     io.ebreak := idu.io.ebreak
     io.valid := idu.io.valid
-    io.memWrite := idu.io.writeMem
-    io.memAddr := exu.io.aluResult
-    io.memData := rf.io.rs2Data
 }
 
 class RegisterFile extends Module {

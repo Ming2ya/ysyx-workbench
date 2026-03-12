@@ -20,20 +20,22 @@ class InstFetch extends BlackBox {
     })
 }
 
-class DecResult extends BlackBox {
+// class DecResult extends BlackBox {
+//     val io = IO(new Bundle {
+//         val valid = Input(UInt(1.W))
+//         val ebreak = Input(UInt(1.W))
+//         val pc = Input(UInt(32.W))
+//     })
+// }
+
+class MEM_DPI extends BlackBox {
     val io = IO(new Bundle {
         val valid = Input(UInt(1.W))
-        val ebreak = Input(UInt(1.W))
-        val pc = Input(UInt(32.W))
-    })
-}
-
-class MEM extends BlackBox {
-    val io = IO(new Bundle {
-        val clk = Input(Clock())
-        val MemtoReg = Input(UInt(1.W))
         val raddr = Input(UInt(32.W))
-        val writeMem = Input(UInt(3.W))
+        val wen   = Input(UInt(1.W))
         val waddr = Input(UInt(32.W))
+        val wdata = Input(UInt(32.W))
+        val wmask = Input(UInt(8.W))
+        val rdata = Output(UInt(32.W))
     })
 }
