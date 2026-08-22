@@ -55,7 +55,7 @@ SRCS-y += $(shell find -L $(DIRS-y) -name "*.c")
 CSRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SRCS-y))
 CXXSRCS := $(shell find $(abspath csrc) -name '*.cc')
 
-VSRCS := $(BUILD_DIR)/$(TOPNAME).sv /home/mingya/ysyx-workbench/npc/playground/src/DPI.sv
+VSRCS := $(BUILD_DIR)/$(TOPNAME).sv $(NPC_HOME)/playground/src/DPI.sv
 SCALASRCS := $(shell find $(abspath playground) -name '*.scala')
 
 INC_PATH += $(VERILATOR_ROOT)/include $(VERILATOR_ROOT)/include/vltstd $(OBJ_DIR)
