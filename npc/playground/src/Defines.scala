@@ -118,9 +118,14 @@ object decode {
   val JUMP_X  = 0.U(1.W)
   val JUMP_Y  = 1.U(1.W)
 
-  // Branch
-  val BRANCH_X = 0.U(1.W)
-  val BRANCH_Y = 1.U(1.W)
+  // Branch condition
+  val BR_X    = 0.U(3.W)
+  val BR_BEQ  = 1.U(3.W)
+  val BR_BNE  = 2.U(3.W)
+  val BR_BLT  = 3.U(3.W)
+  val BR_BGE  = 4.U(3.W)
+  val BR_BLTU = 5.U(3.W)
+  val BR_BGEU = 6.U(3.W)
 
   // Offset
   val BASE_X   = 0.U(2.W)

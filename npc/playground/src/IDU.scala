@@ -37,51 +37,62 @@ class IDU extends Module{
     io.rdAddr  := io.inst(11, 7)
 
     val ctrl = ListLookup( io.inst,
-        List(ALU_X, OP1_X, OP2_X, MEM_X, REN_X, WB_X, IMM_X, JUMP_X, BRANCH_X, BASE_X, EBREAK_X, VALID_X),
+        List(ALU_X, OP1_X, OP2_X, MEM_X, REN_X, WB_X, IMM_X, JUMP_X, BR_X, BASE_X, EBREAK_X, VALID_X),
         Array(
-            ADD   -> List(ALU_ADD , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SUB   -> List(ALU_SUB , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SLT   -> List(ALU_SLT , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SLTU  -> List(ALU_SLTU, OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            XOR   -> List(ALU_XOR , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            OR    -> List(ALU_OR  , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            AND   -> List(ALU_AND , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SLL   -> List(ALU_SLL , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SRL   -> List(ALU_SRL , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SRA   -> List(ALU_SRA , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            ADD   -> List(ALU_ADD , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SUB   -> List(ALU_SUB , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SLT   -> List(ALU_SLT , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SLTU  -> List(ALU_SLTU, OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            XOR   -> List(ALU_XOR , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            OR    -> List(ALU_OR  , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            AND   -> List(ALU_AND , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SLL   -> List(ALU_SLL , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SRL   -> List(ALU_SRL , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SRA   -> List(ALU_SRA , OP1_RS1, OP2_RS2 , MEM_X , REN_Y, WB_ALU, IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
 
-            ADDI  -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SLTI  -> List(ALU_SLT , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SLTUI -> List(ALU_SLTU, OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            ADDI  -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SLTI  -> List(ALU_SLT , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SLTUI -> List(ALU_SLTU, OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            XORI  -> List(ALU_XOR , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            ANDI  -> List(ALU_AND , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SLLI  -> List(ALU_SLL , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SRLI  -> List(ALU_SRL , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SRAI  -> List(ALU_SRA , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
 
-            LB    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_B , REN_Y, WB_MEM, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            LH    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_H , REN_Y, WB_MEM, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            LW    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_W , REN_Y, WB_MEM, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            LBU   -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_BU, REN_Y, WB_MEM, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            LHU   -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_HU, REN_Y, WB_MEM, IMM_I, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            LB    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_B , REN_Y, WB_MEM, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            LH    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_H , REN_Y, WB_MEM, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            LW    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_W , REN_Y, WB_MEM, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            LBU   -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_BU, REN_Y, WB_MEM, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            LHU   -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_HU, REN_Y, WB_MEM, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
 
-            JALR  -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_Y, BRANCH_X, BASE_RS1, EBREAK_X, VALID_Y),
+            JALR  -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_Y, BR_X   , BASE_RS1, EBREAK_X, VALID_Y),
 
-            SB    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_B , REN_X, WB_ALU, IMM_S, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SH    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_H , REN_X, WB_ALU, IMM_S, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            SW    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_W , REN_X, WB_ALU, IMM_S, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            SB    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_B , REN_X, WB_ALU, IMM_S, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SH    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_H , REN_X, WB_ALU, IMM_S, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            SW    -> List(ALU_ADD , OP1_RS1, OP2_IMM , MEM_W , REN_X, WB_ALU, IMM_S, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
 
-            LUI   -> List(ALU_LUI , OP1_X  , OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
-            AUIPC -> List(ALU_ADD , OP1_PC , OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_U, JUMP_X, BRANCH_X, BASE_X  , EBREAK_X, VALID_Y),
+            LUI   -> List(ALU_LUI , OP1_X  , OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_U, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            AUIPC -> List(ALU_ADD , OP1_PC , OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_U, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
 
-            JAL   -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X , REN_Y, WB_ALU, IMM_J, JUMP_Y, BRANCH_X, BASE_PC , EBREAK_X, VALID_Y),
+            JAL   -> List(ALU_ADD , OP1_PC , OP2_FOUR, MEM_X , REN_Y, WB_ALU, IMM_J, JUMP_Y, BR_X   , BASE_PC , EBREAK_X, VALID_Y),
 
-            EBREAK-> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_X  , IMM_X, JUMP_X, BRANCH_X, BASE_X  , EBREAK_Y, VALID_Y)
+            BEQ   -> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_ALU, IMM_B, JUMP_X, BR_BEQ , BASE_PC , EBREAK_X, VALID_Y),
+            BNE   -> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_ALU, IMM_B, JUMP_X, BR_BNE , BASE_PC , EBREAK_X, VALID_Y),
+            BLT   -> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_ALU, IMM_B, JUMP_X, BR_BLT , BASE_PC , EBREAK_X, VALID_Y),
+            BGE   -> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_ALU, IMM_B, JUMP_X, BR_BGE , BASE_PC , EBREAK_X, VALID_Y),
+            BLTU  -> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_ALU, IMM_B, JUMP_X, BR_BLTU, BASE_PC , EBREAK_X, VALID_Y),
+            BGEU  -> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_ALU, IMM_B, JUMP_X, BR_BGEU, BASE_PC , EBREAK_X, VALID_Y),
+
+            EBREAK-> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_X  , IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_Y, VALID_Y)
         )
     )
-    val alu_code::op1_sel::op2_sel::mem_mask::rf_wen::wb_sel::imm_sel::jump::branch::base_sel::ebreak::valid::Nil = ctrl
+    val alu_code::op1_sel::op2_sel::mem_mask::rf_wen::wb_sel::imm_sel::jump::bru_code::base_sel::ebreak::valid::Nil = ctrl
     io.aluCode := alu_code
     io.regWrite:= rf_wen
     io.memToReg:= (wb_sel === WB_MEM).asUInt
     io.memMask := mem_mask
     io.writeMem:= (opcode === "b0100011".U).asUInt
     io.jump    := jump
-    io.branch  := branch    // 分支测试未完成
     io.ebreak  := ebreak
     io.valid   := valid
 
@@ -131,6 +142,13 @@ class IDU extends Module{
     val base = Mux(base_sel === BASE_PC, io.pc, io.rs1Data)
     io.jumpAddr := base + imm
 
+    // branch test
+    val bru = Module(new BRU)
+    bru.io.bruCode := bru_code
+    bru.io.bruSrcA := io.rs1Data
+    bru.io.bruSrcB := io.rs2Data
+    io.branch := bru.io.bruOutput
+
 }
 
 class MEM extends Module {              // 假设访存指令都是4字节对齐的
@@ -164,4 +182,21 @@ class MEM extends Module {              // 假设访存指令都是4字节对齐
             MEM_HU -> MEM_DPI.io.rdata(15, 0).asTypeOf(UInt(32.W))
         )
     )
+}
+
+class BRU extends Module {
+    val io = IO(new Bundle {
+        val bruCode = Input(UInt(3.W))
+        val bruSrcA = Input(UInt(32.W))
+        val bruSrcB = Input(UInt(32.W))
+        val bruOutput = Output(UInt(1.W))
+    })
+    io.bruOutput := MuxLookup(io.bruCode, false.B)(Seq(
+        BR_BEQ  -> (io.bruSrcA === io.bruSrcB),
+        BR_BNE  -> (io.bruSrcA =/= io.bruSrcB),
+        BR_BLT  -> (io.bruSrcA.asSInt <  io.bruSrcB.asSInt),
+        BR_BGE  -> (io.bruSrcA.asSInt >= io.bruSrcB.asSInt),
+        BR_BLTU -> (io.bruSrcA <  io.bruSrcB),
+        BR_BGEU -> (io.bruSrcA >= io.bruSrcB)
+  ))
 }
