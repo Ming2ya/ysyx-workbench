@@ -38,7 +38,7 @@ class ALU extends Module{
     val xor = io.aluSrcA ^ io.aluSrcB
     val sll = io.aluSrcA << io.aluSrcB(4, 0)
     val srl = io.aluSrcA >> io.aluSrcB(4, 0)
-    val sra = (io.aluSrcA.asSInt >> io.aluSrcB).asUInt
+    val sra = (io.aluSrcA.asSInt >> io.aluSrcB(4, 0)).asUInt
     val slt = (io.aluSrcA.asSInt < io.aluSrcB.asSInt).asUInt
     val sltu= (io.aluSrcA < io.aluSrcB).asUInt
     val lui = io.aluSrcB
