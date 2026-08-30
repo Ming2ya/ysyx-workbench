@@ -163,6 +163,8 @@ class MEM extends Module {              // 假设访存指令都是4字节对齐
     })
 
     val MEM_DPI = Module(new MEM_DPI)
+    MEM_DPI.io.clk   := clock
+    MEM_DPI.io.reset := reset
     MEM_DPI.io.valid := io.valid
     MEM_DPI.io.raddr := io.raddr
     MEM_DPI.io.wen   := io.wen

@@ -3,18 +3,20 @@
 #include "local-include/reg.h"
 
 extern "C"{
-void npc_update_reg(uint32_t addr, uint32_t data){
-#ifdef CONFIG_MTRACE_COND
-    Log("Write %-3s: 0x%08x", reg_name(addr), data);
-#endif
-    gpr(addr) = data;
-}
 
 word_t paddr_read(paddr_t addr, int len);
 word_t pmem_read(paddr_t addr, int len);
 void pmem_write(paddr_t addr, int len, word_t data);
 void mtrace_read(vaddr_t addr, int len, word_t data);
 void mtrace_write(vaddr_t addr, int len, word_t data);
+void mtrace_reg(const char* name, uint32_t data);
+
+void npc_update_reg(uint32_t addr, uint32_t data){
+#ifdef CONFIG_MTRACE_COND
+    if (MTRACE_COND) { mtrace_reg(reg_name(addr), data); }
+#endif
+    gpr(addr) = data;
+}
 
 word_t npc_inst_fetch(uint32_t addr){
     return paddr_read(addr, 4);
@@ -22,10 +24,13 @@ word_t npc_inst_fetch(uint32_t addr){
 
 word_t npc_pmem_read(uint32_t addr){
     uint32_t data = pmem_read(addr, 4);
+    return data;
+}
+
+void npc_mtrace_read(uint32_t addr, uint32_t data){
 #ifdef CONFIG_MTRACE_COND
     if (MTRACE_COND) { mtrace_read(addr, 4, data); }
 #endif
-    return data;
 }
 
 void npc_pmem_write(uint32_t waddr, uint32_t wdata, char wmask){

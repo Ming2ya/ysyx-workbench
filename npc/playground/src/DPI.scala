@@ -30,6 +30,8 @@ class InstFetch extends BlackBox {
 
 class MEM_DPI extends BlackBox {
     val io = IO(new Bundle {
+        val clk   = Input(Clock())
+        val reset = Input(Bool())
         val valid = Input(UInt(1.W))
         val raddr = Input(UInt(32.W))
         val wen   = Input(UInt(1.W))

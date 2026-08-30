@@ -47,6 +47,8 @@ endmodule
 // endmodule
 
 module MEM_DPI(
+    input clk,
+    input reset,
     input valid,
     input [31:0] raddr,
     input wen,
@@ -56,6 +58,7 @@ module MEM_DPI(
     output reg [31:0] rdata
 );
     import "DPI-C" function int npc_pmem_read(input int raddr);
+    import "DPI-C" function void npc_mtrace_read(input int raddr, input int rdata);
     import "DPI-C" function void npc_pmem_write(input int waddr, input int wdata, input byte wmask);
 
     always @(*) begin
@@ -65,8 +68,13 @@ module MEM_DPI(
         else begin
             rdata = 0;
         end
-        
-        if (wen) begin
+    end
+
+    always @(posedge clk) begin
+        if (!reset && valid) begin
+            npc_mtrace_read(raddr, rdata);
+        end
+        if (!reset && wen) begin
             npc_pmem_write(waddr, wdata, wmask);
         end
     end

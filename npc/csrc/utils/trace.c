@@ -21,12 +21,45 @@ void ringtrace_print() {
 #endif
 
 #ifdef CONFIG_MTRACE
+vaddr_t read_addr, write_addr;
+word_t read_data, write_data, reg_data;
+const char* reg_name_buf;
+bool read_flag = false, write_flag = false, reg_flag = false;
+
+void mtrace_print(bool print_step){
+    if (read_flag) {
+        log_write("    read from " FMT_PADDR ": " FMT_WORD "\n", read_addr, read_data);
+        if (print_step) printf("    read from " FMT_PADDR ": " FMT_WORD "\n", read_addr, read_data);
+    }
+    if (write_flag) {
+        log_write("    write to " FMT_PADDR ": " FMT_WORD "\n", write_addr, write_data);
+        if (print_step) printf("    write to " FMT_PADDR ": " FMT_WORD "\n", write_addr, write_data);
+    }
+    if (reg_flag) {
+        log_write("    reg write %-3s: " FMT_WORD "\n", reg_name_buf, reg_data);
+        if (print_step) printf("    reg write %-3s: " FMT_WORD "\n", reg_name_buf, reg_data);
+    }
+    read_flag = false;
+    write_flag = false;
+    reg_flag = false;
+}
+
 void mtrace_read(vaddr_t addr, int len, word_t data){
-    Log("read " FMT_PADDR ": " FMT_WORD, addr, data);
+    read_addr = addr;
+    read_data = data;
+    read_flag = true;
 }
 
 void mtrace_write(vaddr_t addr, int len, word_t data){
-    Log("write " FMT_PADDR ": " FMT_WORD, addr, data);
+    write_addr = addr;
+    write_data = data;
+    write_flag = true;
+}
+
+void mtrace_reg(const char* name, uint32_t data){
+    reg_name_buf = name;
+    reg_data = data;
+    reg_flag = true;
 }
 
 #endif
