@@ -4,6 +4,7 @@ import chisel3._
 import npc.defines.decode._
 import chisel3.util.Mux1H
 import chisel3.util.MuxLookup
+import chisel3.util.Cat
 
 class EXU extends Module{
     val io = IO(new Bundle {
@@ -31,16 +32,18 @@ class ALU extends Module{
         val aluResult = Output(UInt(32.W))
     })
 
-    val add = io.aluSrcA + io.aluSrcB
-    val sub = io.aluSrcA - io.aluSrcB
+    val Binvert = ~(io.aluCode === ALU_ADD)
+    val B = Mux(Binvert, ~io.aluSrcB, io.aluSrcB)
+    val add = io.aluSrcA + B + Binvert.asUInt
+    val isLT = (io.aluSrcA(31) & ~io.aluSrcB(31)) | ((io.aluSrcA(31) === io.aluSrcB(31)) & add(31))
+    val isLTU = (~io.aluSrcA(31) & io.aluSrcB(31)) | ((io.aluSrcA(31) === io.aluSrcB(31)) & add(31))
+
     val and = io.aluSrcA & io.aluSrcB
     val or  = io.aluSrcA | io.aluSrcB
     val xor = io.aluSrcA ^ io.aluSrcB
     val sll = io.aluSrcA << io.aluSrcB(4, 0)
     val srl = io.aluSrcA >> io.aluSrcB(4, 0)
     val sra = (io.aluSrcA.asSInt >> io.aluSrcB(4, 0)).asUInt
-    val slt = (io.aluSrcA.asSInt < io.aluSrcB.asSInt).asUInt
-    val sltu= (io.aluSrcA < io.aluSrcB).asUInt
     val lui = io.aluSrcB
 
     val aluResult = MuxLookup(
@@ -48,15 +51,15 @@ class ALU extends Module{
         0.U(32.W)
         )(Seq(
             ALU_ADD  -> add,
-            ALU_SUB  -> sub,
+            ALU_SUB  -> add,
             ALU_AND  -> and,
             ALU_OR   -> or,
             ALU_XOR  -> xor,
             ALU_SLL  -> sll,
             ALU_SRL  -> srl,
             ALU_SRA  -> sra,
-            ALU_SLT  -> slt,
-            ALU_SLTU -> sltu,
+            ALU_SLT  -> Cat(0.U(31.W), isLT),
+            ALU_SLTU -> Cat(0.U(31.W), isLTU),
             ALU_LUI  -> lui
         )
     )
