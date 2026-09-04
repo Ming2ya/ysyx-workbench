@@ -193,6 +193,7 @@ void ftrace_print(){
     Log("Function Trace:");
     for (int i = 0; i < f_len; i ++){
         printf("%s", f_log[i]);
+        log_write("%s", f_log[i]);
     }
 }
 #endif
