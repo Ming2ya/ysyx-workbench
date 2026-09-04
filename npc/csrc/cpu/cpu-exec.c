@@ -25,6 +25,8 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+void ringtrace_add(char* log);
+void ringtrace_print();
 void ftrace_main(Decode *s, vaddr_t npc);
 void ftrace_print();
 void mtrace_print(bool print_step);
@@ -34,6 +36,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (ITRACE_COND) { log_write("\n%s\n", _this->logbuf); }
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+  IFDEF(CONFIG_IRINGTRACE, ringtrace_add(_this->logbuf));
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   IFDEF(CONFIG_FTRACE, ftrace_main(_this, dnpc));
   IFDEF(CONFIG_MTRACE, mtrace_print(g_print_step));
@@ -119,7 +122,7 @@ void cpu_exec(uint64_t n) {
 
     case NPC_ABORT:
       Log("nemu: %s at pc = " FMT_WORD, ANSI_FMT("ABORT", ANSI_FG_RED), npc_state.halt_pc);
-      IFDEF(CONFIG_RINGTRACE, ringtrace_print()); statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); break;
+      IFDEF(CONFIG_IRINGTRACE, ringtrace_print()); statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); break;
     case NPC_END:
       Log("nemu: %s at pc = " FMT_WORD,
            (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
