@@ -69,7 +69,7 @@ class RegisterFile extends Module {
         val rs2Data = Output(UInt(32.W))
     })
 
-    val regFile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
+    val regFile = RegInit(VecInit(Seq.fill(16)(0.U(32.W))))
 
     when(io.regWrite===1.U && io.rdAddr =/= 0.U) {
         regFile(io.rdAddr) := io.rdData
