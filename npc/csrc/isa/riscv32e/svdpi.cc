@@ -34,17 +34,20 @@ void npc_mtrace_read(uint32_t addr, uint32_t data){
 }
 
 void npc_pmem_write(uint32_t waddr, uint32_t wdata, char wmask){
-    uint32_t bitMask;
-    if (wmask == 0x1) bitMask = 0x000000FF;
-    else if (wmask == 0x3) bitMask = 0x0000FFFF;
-    else if (wmask == 0xF) bitMask = 0xFFFFFFFF;
-    else panic("unexpected wmask");
+    uint32_t mask =
+        ((wmask & 0x1) ? 0x000000ffu : 0) |
+        ((wmask & 0x2) ? 0x0000ff00u : 0) |
+        ((wmask & 0x4) ? 0x00ff0000u : 0) |
+        ((wmask & 0x8) ? 0xff000000u : 0);
 
-    uint32_t oldData = paddr_read(waddr, 4);
-    wdata = (wdata & bitMask) | (oldData & ~bitMask);
+    for (int i = 0; i < 4; i++) {
+        if (wmask & (1u << i)) {
+            uint32_t byte = (wdata >> (i * 8)) & 0xff;
+            pmem_write(waddr + i, 1, byte);
+        }
+    }
 #ifdef CONFIG_MTRACE_COND
-    if (MTRACE_COND) { mtrace_write(waddr, 4, wdata); }
+    if (MTRACE_COND) { mtrace_write(waddr, 4, wdata & mask); }
 #endif
-    pmem_write(waddr, 4, wdata);
 }
 }

@@ -42,7 +42,7 @@ class Top extends Module{
     mem.io.wen   := idu.io.writeMem
     mem.io.waddr := exu.io.aluResult
     mem.io.wdata := rf.io.rs2Data
-    mem.io.wmask := idu.io.memMask
+    mem.io.memType := idu.io.memType
 
     // RF  connections
     rf.io.rs1Addr := idu.io.rs1Addr

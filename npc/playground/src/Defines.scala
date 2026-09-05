@@ -90,12 +90,12 @@ object decode {
   val OP2_FOUR= 3.U(2.W)
 
   // MEM
-  val MEM_X   = 0.U(8.W)
-  val MEM_B   = 1.U(8.W)
-  val MEM_H   = 3.U(8.W)
-  val MEM_W   = 15.U(8.W)
-  val MEM_BU  = 17.U(8.W)
-  val MEM_HU  = 19.U(8.W)
+  val MEM_X   = 0.U(3.W)
+  val MEM_B   = 1.U(3.W)
+  val MEM_H   = 2.U(3.W)
+  val MEM_W   = 3.U(3.W)
+  val MEM_BU  = 4.U(3.W)
+  val MEM_HU  = 5.U(3.W)
 
   // REN
   val REN_X   = 0.U(1.W)

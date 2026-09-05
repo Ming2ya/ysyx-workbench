@@ -17,7 +17,7 @@ class IDU extends Module{
         val regWrite= Output(UInt(1.W))
         val memToReg= Output(UInt(1.W))
         val writeMem= Output(UInt(1.W))
-        val memMask = Output(UInt(8.W))
+        val memType = Output(UInt(3.W))
         val aluSrcA = Output(UInt(32.W))
         val aluSrcB = Output(UInt(32.W))
         val aluCode = Output(UInt(4.W))
@@ -86,11 +86,11 @@ class IDU extends Module{
             EBREAK-> List(ALU_X   , OP1_X  , OP2_X   , MEM_X , REN_X, WB_X  , IMM_X, JUMP_X, BR_X   , BASE_X  , EBREAK_Y, VALID_Y)
         )
     )
-    val alu_code::op1_sel::op2_sel::mem_mask::rf_wen::wb_sel::imm_sel::jump::bru_code::base_sel::ebreak::valid::Nil = ctrl
+    val alu_code::op1_sel::op2_sel::mem_type::rf_wen::wb_sel::imm_sel::jump::bru_code::base_sel::ebreak::valid::Nil = ctrl
     io.aluCode := alu_code
     io.regWrite:= rf_wen
     io.memToReg:= (wb_sel === WB_MEM).asUInt
-    io.memMask := mem_mask
+    io.memType := mem_type
     io.writeMem:= (opcode === "b0100011".U).asUInt
     io.jump    := jump
     io.ebreak  := ebreak
@@ -151,37 +151,101 @@ class IDU extends Module{
 
 }
 
-class MEM extends Module {              // 假设访存指令都是4字节对齐的
+class MEM extends Module {
     val io = IO(new Bundle {
-        val valid = Input(UInt(1.W))
-        val raddr = Input(UInt(32.W))
-        val wen   = Input(UInt(1.W))
-        val waddr = Input(UInt(32.W))
-        val wdata = Input(UInt(32.W))
-        val wmask = Input(UInt(8.W))
-        val rdata = Output(UInt(32.W))
+        val valid   = Input(UInt(1.W))
+        val raddr   = Input(UInt(32.W))
+        val wen     = Input(UInt(1.W))
+        val waddr   = Input(UInt(32.W))
+        val wdata   = Input(UInt(32.W))
+        val memType = Input(UInt(3.W))
+        val rdata   = Output(UInt(32.W))
     })
 
     val MEM_DPI = Module(new MEM_DPI)
     MEM_DPI.io.clk   := clock
     MEM_DPI.io.reset := reset
     MEM_DPI.io.valid := io.valid
-    MEM_DPI.io.raddr := io.raddr
     MEM_DPI.io.wen   := io.wen
-    MEM_DPI.io.waddr := io.waddr
-    MEM_DPI.io.wdata := io.wdata
-    MEM_DPI.io.wmask := io.wmask
 
+    // lh/lhu：地址必须是 2 字节对齐
+    when (
+        (io.valid === 1.U) &&
+        ((io.memType === MEM_H) || (io.memType === MEM_HU))
+    ) {
+        assert(!io.raddr(0), "misaligned half-word load")
+    }
+
+    // lw：地址必须是 4 字节对齐
+    when ((io.valid === 1.U) && (io.memType === MEM_W)) {
+        assert(io.raddr(1, 0) === 0.U, "misaligned word load")
+    }
+
+    // sh：地址必须是 2 字节对齐
+    when ((io.wen === 1.U) && (io.memType === MEM_H)) {
+        assert(!io.waddr(0), "misaligned half-word store")
+    }
+
+    // sw：地址必须是 4 字节对齐
+    when ((io.wen === 1.U) && (io.memType === MEM_W)) {
+        assert(io.waddr(1, 0) === 0.U, "misaligned word store")
+    }
+
+    val wByteOffset = io.waddr(1, 0)
+    val wHalfOffset = io.waddr(1)        // 暂时不支持0x1,0x3 offset的lh/sh指令
+    MEM_DPI.io.waddr := io.waddr & ~(0x3.U(32.W))
+    MEM_DPI.io.wdata := MuxLookup(
+        io.memType,
+        0.U(32.W)
+        )(Seq(
+            MEM_X  -> 0.U(32.W),
+            MEM_B  -> (io.wdata(7, 0) << Cat(wByteOffset, 0.U(3.W))),
+            MEM_H  -> (io.wdata(15, 0) << Cat(wHalfOffset, 0.U(4.W))),
+            MEM_W  -> io.wdata
+        )
+    )
+    MEM_DPI.io.wmask := MuxLookup(
+        io.memType,
+        0.U(8.W)
+        )(Seq(
+            MEM_X  -> 0.U(8.W),
+            MEM_B  -> (1.U << wByteOffset),
+            MEM_H  -> (3.U << (wHalfOffset << 1)),
+            MEM_W  -> 15.U(8.W)
+        )
+    )
+
+    val rByteOffset = io.raddr(1, 0)
+    val rHalfOffset = io.raddr(1)        // 暂时不支持0x1,0x3 offset的lh/sh指令
+    MEM_DPI.io.raddr := io.raddr & ~(0x3.U(32.W))
+    val byteData = MuxLookup(
+        rByteOffset,
+        0.U(8.W)
+        )(Seq(
+            0.U -> MEM_DPI.io.rdata(7, 0),
+            1.U -> MEM_DPI.io.rdata(15, 8),
+            2.U -> MEM_DPI.io.rdata(23, 16),
+            3.U -> MEM_DPI.io.rdata(31, 24)
+        )
+    )
+    val halfData = MuxLookup(
+        rHalfOffset,
+        0.U(16.W)
+        )(Seq(
+            0.U -> MEM_DPI.io.rdata(15, 0),
+            1.U -> MEM_DPI.io.rdata(31, 16)
+        )
+    )
     io.rdata := MuxLookup(
-        io.wmask,
+        io.memType,
         0.U(32.W),
         )(Seq(
             MEM_X  -> 0.U(32.W),
-            MEM_B  -> MEM_DPI.io.rdata(7, 0).asSInt.asTypeOf(SInt(32.W)).asUInt,
-            MEM_H  -> MEM_DPI.io.rdata(15, 0).asSInt.asTypeOf(SInt(32.W)).asUInt,
+            MEM_B  -> Cat(Fill(24, byteData(7)), byteData),
+            MEM_H  -> Cat(Fill(16, halfData(15)), halfData),
             MEM_W  -> MEM_DPI.io.rdata,
-            MEM_BU -> MEM_DPI.io.rdata(7, 0).asTypeOf(UInt(32.W)),
-            MEM_HU -> MEM_DPI.io.rdata(15, 0).asTypeOf(UInt(32.W))
+            MEM_BU -> Cat(0.U(24.W), byteData),
+            MEM_HU -> Cat(0.U(16.W), halfData)
         )
     )
 }
