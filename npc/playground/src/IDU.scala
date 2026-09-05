@@ -139,8 +139,7 @@ class IDU extends Module{
     io.imm := imm
 
     // jumpAddr
-    val base = Mux(base_sel === BASE_PC, io.pc, io.rs1Data)
-    io.jumpAddr := base + imm
+    io.jumpAddr := Mux(base_sel === BASE_RS1, (io.rs1Data + imm) & ~1.U(32.W), io.pc + imm)
 
     // branch test
     val bru = Module(new BRU)
