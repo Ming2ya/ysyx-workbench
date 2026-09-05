@@ -6,12 +6,16 @@
 !*.scala
 !*.[cSh]
 !*.v
+!*.sv
 !*.cpp
 !*.cc
 !.gitignore
 !.scalafmt.conf
 !README.md
+!Kconfig
 build/
+include/config
+include/generated
 
 # mill
 !*.mill
