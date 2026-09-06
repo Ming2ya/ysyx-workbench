@@ -14,20 +14,6 @@
 ***************************************************************************************/
 
 #include <isa.h>
-#include <memory/paddr.h>
 
-void mtrace_read(vaddr_t addr, int len, word_t data);
-void mtrace_write(vaddr_t addr, int len, word_t data);
-
-word_t vaddr_ifetch(vaddr_t addr, int len) {
-  return paddr_read(addr, len);
-}
-
-word_t vaddr_read(vaddr_t addr, int len) {
-  word_t data = paddr_read(addr, len);
-  return data;
-}
-
-void vaddr_write(vaddr_t addr, int len, word_t data) {
-  paddr_write(addr, len, data);
+void dev_raise_intr() {
 }

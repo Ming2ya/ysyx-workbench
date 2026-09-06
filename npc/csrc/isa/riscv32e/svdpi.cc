@@ -4,9 +4,9 @@
 
 extern "C"{
 
-word_t paddr_read(paddr_t addr, int len);
-word_t pmem_read(paddr_t addr, int len);
-void pmem_write(paddr_t addr, int len, word_t data);
+word_t vaddr_ifetch(paddr_t addr, int len);
+word_t vaddr_read(paddr_t addr, int len);
+void vaddr_write(paddr_t addr, int len, word_t data);
 void mtrace_read(vaddr_t addr, int len, word_t data);
 void mtrace_write(vaddr_t addr, int len, word_t data);
 void mtrace_reg(const char* name, uint32_t data);
@@ -19,11 +19,11 @@ void npc_update_reg(uint32_t addr, uint32_t data){
 }
 
 word_t npc_inst_fetch(uint32_t addr){
-    return paddr_read(addr, 4);
+    return vaddr_ifetch(addr, 4);
 }
 
-word_t npc_pmem_read(uint32_t addr){
-    uint32_t data = pmem_read(addr, 4);
+word_t npc_vaddr_read(uint32_t addr){
+    uint32_t data = vaddr_read(addr, 4);
     return data;
 }
 
@@ -33,7 +33,7 @@ void npc_mtrace_read(uint32_t addr, uint32_t data){
 #endif
 }
 
-void npc_pmem_write(uint32_t waddr, uint32_t wdata, char wmask){
+void npc_vaddr_write(uint32_t waddr, uint32_t wdata, char wmask){
     uint32_t mask =
         ((wmask & 0x1) ? 0x000000ffu : 0) |
         ((wmask & 0x2) ? 0x0000ff00u : 0) |
@@ -43,7 +43,7 @@ void npc_pmem_write(uint32_t waddr, uint32_t wdata, char wmask){
     for (int i = 0; i < 4; i++) {
         if (wmask & (1u << i)) {
             uint32_t byte = (wdata >> (i * 8)) & 0xff;
-            pmem_write(waddr + i, 1, byte);
+            vaddr_write(waddr + i, 1, byte);
         }
     }
 #ifdef CONFIG_MTRACE_COND
