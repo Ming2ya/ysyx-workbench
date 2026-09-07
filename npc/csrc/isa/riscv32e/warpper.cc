@@ -1,17 +1,25 @@
 #include <verilated_vcd_c.h>
 #include "VTop.h"
 
-static int sim_time;
 static VTop *dut = NULL;
-static VerilatedVcdC *vcd = NULL;
 
+#ifdef CONFIG_WAVE
+static VerilatedVcdC *vcd = NULL;
+static int sim_time;
 static void update_time(){
     sim_time += 5;
 }
+#endif
 
 void single_cyc() {
-    dut->clock = 1; dut->eval(); vcd->dump(sim_time); update_time();
-    dut->clock = 0; dut->eval(); vcd->dump(sim_time); update_time();
+    dut->clock = 1; dut->eval();
+#ifdef CONFIG_WAVE
+    vcd->dump(sim_time); update_time();
+#endif
+    dut->clock = 0; dut->eval(); 
+#ifdef CONFIG_WAVE
+    vcd->dump(sim_time); update_time();
+#endif
 }
 
 static void reset(int n){
@@ -25,17 +33,21 @@ extern "C" {
 
 void init_sim(){
     dut = new VTop;
+#ifdef CONFIG_WAVE
     vcd = new VerilatedVcdC;
     Verilated::traceEverOn(true);
     dut->trace(vcd, 5);
     vcd->open("build/wave.vcd");
+#endif
     reset(3);
 }
 
 void exit_sim(){
+#ifdef CONFIG_WAVE
     vcd->dump(sim_time);
-    dut->final();
     vcd->close();
+#endif
+    dut->final();
 }
 
 int npc_exec_once() {
