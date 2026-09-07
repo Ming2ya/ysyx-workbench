@@ -54,6 +54,7 @@ class IDU extends Module{
             SLTI  -> List(ALU_SLT , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
             SLTUI -> List(ALU_SLTU, OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
             XORI  -> List(ALU_XOR , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
+            ORI   -> List(ALU_OR  , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
             ANDI  -> List(ALU_AND , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
             SLLI  -> List(ALU_SLL , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
             SRLI  -> List(ALU_SRL , OP1_RS1, OP2_IMM , MEM_X , REN_Y, WB_ALU, IMM_I, JUMP_X, BR_X   , BASE_X  , EBREAK_X, VALID_Y),
