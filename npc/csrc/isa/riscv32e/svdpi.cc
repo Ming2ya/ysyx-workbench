@@ -40,11 +40,15 @@ void npc_vaddr_write(uint32_t waddr, uint32_t wdata, char wmask){
         ((wmask & 0x4) ? 0x00ff0000u : 0) |
         ((wmask & 0x8) ? 0xff000000u : 0);
 
-    for (int i = 0; i < 4; i++) {
-        if (wmask & (1u << i)) {
-            uint32_t byte = (wdata >> (i * 8)) & 0xff;
-            vaddr_write(waddr + i, 1, byte);
-        }
+    switch (wmask) {
+        case 0x1: vaddr_write(waddr, 1, wdata); break;
+        case 0x2: vaddr_write(waddr + 1, 1, wdata >> 8); break;
+        case 0x4: vaddr_write(waddr + 2, 1, wdata >> 16); break;
+        case 0x8: vaddr_write(waddr + 3, 1, wdata >> 24); break;
+        case 0x3: vaddr_write(waddr, 2, wdata); break;
+        case 0xc: vaddr_write(waddr + 2, 2, wdata >> 16); break;
+        case 0xf: vaddr_write(waddr, 4, wdata); break;
+        default: assert(0);
     }
 #ifdef CONFIG_MTRACE_COND
     if (MTRACE_COND) { mtrace_write(waddr, 4, wdata & mask); }
