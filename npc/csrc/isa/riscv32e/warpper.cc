@@ -16,7 +16,7 @@ void single_cyc() {
 #ifdef CONFIG_WAVE
     vcd->dump(sim_time); update_time();
 #endif
-    dut->clock = 0; dut->eval(); 
+    dut->clock = 0; dut->eval();
 #ifdef CONFIG_WAVE
     vcd->dump(sim_time); update_time();
 #endif
