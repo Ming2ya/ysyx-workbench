@@ -111,11 +111,11 @@ void cpu_exec(uint64_t n) {
     default: npc_state.state = NPC_RUNNING;
   }
 
-  uint64_t timer_start = get_time();
+  uint64_t timer_start = get_uptime();
 
   execute(n);
 
-  uint64_t timer_end = get_time();
+  uint64_t timer_end = get_uptime();
   g_timer += timer_end - timer_start;
 
   switch (npc_state.state) {

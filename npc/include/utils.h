@@ -32,7 +32,8 @@ extern NPCState npc_state;
 
 // ----------- timer -----------
 
-uint64_t get_time();
+uint64_t get_uptime();
+uint64_t get_rtc_time();
 
 // ----------- log -----------
 

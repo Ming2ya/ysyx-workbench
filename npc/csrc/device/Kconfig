@@ -39,11 +39,11 @@ if HAS_TIMER
 config RTC_PORT
   depends on HAS_PORT_IO
   hex "Port address of the timer"
-  default 0x48
+  default 0x40
 
 config RTC_MMIO
   hex "MMIO address of the timer"
-  default 0xa0000048
+  default 0xa0000040
 endif # HAS_TIMER
 
 menuconfig HAS_KEYBOARD
