@@ -1,3 +1,4 @@
+#include <common.h>
 #include <verilated_vcd_c.h>
 #include "VTop.h"
 

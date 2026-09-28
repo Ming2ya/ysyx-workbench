@@ -76,7 +76,7 @@ CFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 LDFLAGS += $(CFLAGS_BUILD) #-Wl,--no-relax
 LDFLAGS += $(LIBS)
 VFLAGS += --cc --MMD --build --exe --top-module $(TOPNAME) -sv
-ifdef $(CONFIG_WAVE)
+ifdef CONFIG_WAVE
 VFLAGS += --trace
 endif
 
