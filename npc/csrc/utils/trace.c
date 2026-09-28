@@ -12,9 +12,9 @@ void ringtrace_add(char* log) {
 }
 
 void ringtrace_print() {
-    Log("Instruction Ring Trace:");
+    log_write("Instruction Ring Trace:\n");
     for (int i = 0; i < CONFIG_RINGTRACE_LENGTH; i ++) {
-        if (ringbuf[ringhead][0] != '\0') puts(ringbuf[ringhead]);
+        if (ringbuf[ringhead][0] != '\0') log_write(ringbuf[ringhead]);
         ringhead = (ringhead + 1) % CONFIG_RINGTRACE_LENGTH;
     }
 }
@@ -190,9 +190,8 @@ void ftrace_main(Decode *s, vaddr_t npc){
 void ftrace_print(){
     free(func_name);
     free(func_tab);
-    Log("Function Trace:");
+    log_write("Function Trace:");
     for (int i = 0; i < f_len; i ++){
-        printf("%s", f_log[i]);
         log_write("%s", f_log[i]);
     }
 }

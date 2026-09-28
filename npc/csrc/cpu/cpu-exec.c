@@ -25,6 +25,7 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+void device_update();
 void ringtrace_add(char* log);
 void ringtrace_print();
 void ftrace_main(Decode *s, vaddr_t npc);
@@ -110,11 +111,11 @@ void cpu_exec(uint64_t n) {
     default: npc_state.state = NPC_RUNNING;
   }
 
-  uint64_t timer_start = get_time();
+  uint64_t timer_start = get_uptime();
 
   execute(n);
 
-  uint64_t timer_end = get_time();
+  uint64_t timer_end = get_uptime();
   g_timer += timer_end - timer_start;
 
   switch (npc_state.state) {
@@ -129,6 +130,6 @@ void cpu_exec(uint64_t n) {
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED)),
           npc_state.halt_pc);
       // fall through
-    case NPC_QUIT: statistic(); IFDEF(CONFIG_FTRACE, ftrace_print());
+    case NPC_QUIT: statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); IFDEF(CONFIG_IRINGTRACE, ringtrace_print());
   }
 }
