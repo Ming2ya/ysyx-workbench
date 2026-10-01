@@ -25,7 +25,7 @@ void etrace_ret(vaddr_t epc);
 #define Mw vaddr_write
 
 enum {
-  TYPE_R, TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B,
+  TYPE_R, TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_CSR,
   TYPE_N, // none
 };
 
@@ -37,7 +37,7 @@ enum {
 #define immJ() do { *imm = SEXT(BITS(i, 31, 31) << 20 | BITS(i, 19, 12) << 12 | BITS(i, 20, 20) << 11 | BITS(i, 30, 21) << 1, 21); } while(0)
 #define immB() do { *imm = SEXT(BITS(i, 31, 31) << 12 | BITS(i, 7, 7) << 11 | BITS(i, 30, 25) << 5 | BITS(i, 11, 8) << 1, 13); } while(0)
 
-static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
+static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, word_t *csr_idx, int type) {
   uint32_t i = s->isa.inst;
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
@@ -49,6 +49,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     case TYPE_S: src1R(); src2R(); immS(); break;
     case TYPE_J:                   immJ(); break;
     case TYPE_B: src1R(); src2R(); immB(); break;
+    case TYPE_CSR: src1R(); *csr_idx= BITS(i, 31, 20); break;
     case TYPE_N: break;
     default: panic("unsupported type = %d", type);
   }
@@ -60,8 +61,8 @@ static int decode_exec(Decode *s) {
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   int rd = 0; \
-  word_t src1 = 0, src2 = 0, imm = 0; \
-  decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
+  word_t src1 = 0, src2 = 0, imm = 0, csr_idx = 0;\
+  decode_operand(s, &rd, &src1, &src2, &imm, &csr_idx, concat(TYPE_, type)); \
   __VA_ARGS__ ; \
 }
 
@@ -121,12 +122,12 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 101 ????? 11000 11", bge    , B, if ((sword_t)src1 >= (sword_t)src2) s->dnpc = s->pc + imm);
   INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu   , B, if (src1 < src2) s->dnpc = s->pc + imm);
   INSTPAT("??????? ????? ????? 111 ????? 11000 11", bgeu   , B, if (src1 >= src2) s->dnpc = s->pc + imm);
-// CSR 扩展 （暂时复用I立即数，后续考虑独立解码）
-  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, R(rd) = csr(imm); csr(imm) = src1);
-  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(rd) = csr(imm); csr(imm) |= src1);
-  INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc  , I, R(rd) = csr(imm); csr(imm) &= ~src1);
+// CSR 扩展
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , CSR, R(rd) = csr(csr_idx); csr(csr_idx) = src1);
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , CSR, R(rd) = csr(csr_idx); csr(csr_idx) |= src1);
+  INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc  , CSR, R(rd) = csr(csr_idx); csr(csr_idx) &= ~src1);
 // N type
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret  , N, s->dnpc = csr(CSR_MEPC); etrace_ret(csr(CSR_MEPC)));
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = csr(CSR_MEPC); etrace_ret(csr(CSR_MEPC)));
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = isa_raise_intr(11, s->pc));
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
