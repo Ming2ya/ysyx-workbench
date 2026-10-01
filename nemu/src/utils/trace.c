@@ -174,3 +174,13 @@ void dtrace_write(vaddr_t addr, int len, word_t data, char *name){
 }
 
 #endif
+
+#ifdef CONFIG_ETRACE
+void etrace_call(word_t NO, vaddr_t epc, vaddr_t mtvec){
+    Log("Exception/Interrupt NO.%d at " FMT_PADDR " (mtvec: " FMT_PADDR ")", NO, epc, mtvec);
+}
+
+void etrace_ret(vaddr_t epc){
+    Log("Return from Exception/Interrupt at " FMT_PADDR, epc);
+}
+#endif

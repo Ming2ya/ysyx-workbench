@@ -18,6 +18,8 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
+void etrace_ret(vaddr_t epc);
+
 #define R(i) gpr(i)
 #define Mr vaddr_read
 #define Mw vaddr_write
@@ -124,7 +126,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(rd) = csr(imm); csr(imm) |= src1);
   INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc  , I, R(rd) = csr(imm); csr(imm) &= ~src1);
 // N type
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret  , N, s->dnpc = csr(CSR_MEPC));
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret  , N, s->dnpc = csr(CSR_MEPC); etrace_ret(csr(CSR_MEPC)));
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = isa_raise_intr(11, s->pc));
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
