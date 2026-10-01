@@ -16,14 +16,24 @@
 #include <isa.h>
 
 void etrace_call(word_t NO, vaddr_t epc, vaddr_t mtvec);
+void etrace_ret(vaddr_t epc);
 
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   cpu.csr[CSR_MEPC] = epc;
   cpu.csr[CSR_MCAUSE] = NO;
 
+#ifdef CONFIG_ETRACE
   etrace_call(NO, epc, cpu.csr[CSR_MTVEC]);
+#endif
 
   return cpu.csr[CSR_MTVEC];
+}
+
+word_t isa_return_intr() {
+#ifdef CONFIG_ETRACE
+  etrace_ret(cpu.csr[CSR_MEPC]);
+#endif
+  return cpu.csr[CSR_MEPC];
 }
 
 word_t isa_query_intr() {
