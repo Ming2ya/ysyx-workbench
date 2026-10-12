@@ -131,13 +131,13 @@ void cpu_exec(uint64_t n) {
 
     case NEMU_ABORT:
       Log("nemu: %s at pc = " FMT_WORD, ANSI_FMT("ABORT", ANSI_FG_RED), nemu_state.halt_pc);
-      IFDEF(CONFIG_RINGTRACE, ringtrace_print()); statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); break;
+      IFDEF(CONFIG_IRINGTRACE, ringtrace_print()); statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); break;
     case NEMU_END:
       Log("nemu: %s at pc = " FMT_WORD,
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED)),
           nemu_state.halt_pc);
       // fall through
-    case NEMU_QUIT: statistic(); IFDEF(CONFIG_FTRACE, ftrace_print());
+    case NEMU_QUIT: statistic(); IFDEF(CONFIG_FTRACE, ftrace_print()); IFDEF(CONFIG_IRINGTRACE, ringtrace_print());
   }
 }
